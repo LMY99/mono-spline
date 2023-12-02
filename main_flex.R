@@ -1,6 +1,7 @@
 set.seed(949)
 
 source("functions_flex.R")
+source("exchangable_cov.R")
 
 library(EnvStats)
 

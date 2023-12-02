@@ -4,6 +4,7 @@ usePackage("splines2")
 usePackage("TruncatedNormal")
 usePackage("mvtnorm")
 usePackage("matrixStats")
+source("exchangable_cov.R")
 options(warn=0)
 
 library(EnvStats)
