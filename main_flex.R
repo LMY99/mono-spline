@@ -27,7 +27,7 @@ mean1 <- 70; sd1 <- 5; mean2 <- 100; sd2 <- 5; p1 <- 0.4; p2 <- 0.6
 
 N <- 250
 
-dataset_num <- 100
+dataset_num <- 1000
 
 CI_repeat <- array(0,dim=c(dataset_num,1201,5))
 coef_repeat <- array(0,dim=c(dataset_num,5000,5))
@@ -182,7 +182,7 @@ coefs[(nX+1):ncol(covar.list[[1]]),,1] <-
                                   smooth.sigma = 1,flat.sigma = 1)$V,
              lb=rep(0,ncol(B))))
 sigmays[] <- residual_var
-pens[,1] <- c(Inf,1e4)
+pens[,1] <- c(0.1,0.5)
 sigmaws[] <- random_effect_var
 # REs[,,1] <- array(rnorm(prod(dim(long_ss))),
 #                   dim=dim(long_ss))
