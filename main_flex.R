@@ -199,7 +199,7 @@ w <- rep(1,ncol(B))
 #w <- NULL
 # Perform MCMC ----------------------------------------------------
 time0 <- proc.time()
-for(i in 1:(R-1)){
+for(i in 1:1){
   if((i+1)%%(R/10)==0) cat(sprintf("%03d%% ",(i+1)/(R/100)))
   if((i+1)%%(R)==0) cat("\n")
   prec <- block_Matrix(beta.prior$precision,
@@ -212,10 +212,10 @@ for(i in 1:(R-1)){
                        re_var = sigmaws[i],
                        block_sizes = long_all_ss)
   
-  coefs[,,i+1] <- update_coef(covar.list,nX,Y,as.matrix(REs[df$ID,,i],ncol=K),
+  coefs[,,1:R] <- aperm(update_coef(covar.list,nX,Y,as.matrix(REs[df$ID,,i],ncol=K),
                               V,
                               coef.prior$mean,
-                              prec,samples=1)
+                              prec,samples=R),c(2,3,1))
   # new_pens <- update_pens(gamma=as.matrix(coefs[(nX+1):ncol(covar.list[[1]]),,i+1],nrow=K),
   #                         mu=gamma.prior$mean,
   #                         lambda=pens[,i],

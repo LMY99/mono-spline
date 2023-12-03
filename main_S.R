@@ -206,7 +206,7 @@ M_pen <- lincon(dfi-4,0)
 
 # Perform MCMC ----------------------------------------------------
 # i <- 1
-for(i in 1:(R-1)){
+for(i in 1:(1)){
  if((i+1)%%(R/10)==0) cat(sprintf("%03d%% ",(i+1)/(R/100)))
  if((i+1)%%(R/1)==0) cat("\n")
   verbose=FALSE
@@ -224,8 +224,8 @@ for(i in 1:(R-1)){
   u <- update_coef(covar.list,nX,Y,as.matrix(REs[df$ID,,i],ncol=1),
                    V,
                    coef.prior$mean,
-                   prec,M_coef,verbose,samples=1)
-  coefs[,,i+1] <- u$res
+                   prec,M_coef,verbose,samples=R)
+  coefs[,,1:R] <- aperm(u$res,c(2,3,1))
   #inflex_prob[,,i+1] <- u$inflex_prob
   # current <- "Penalty"
   # new_pens <- update_pens(gamma=as.matrix(coefs[(nX+1):ncol(covar.list[[1]]),,i+1],ncol=1),
