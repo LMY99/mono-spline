@@ -138,6 +138,11 @@ for(i in 1:length(unique.IDs))
     long_ss[i,j] <- sum((df$ID==i)&(!is.na(Y[,j])))
   }
 
+long_all_ss <- rep(0,length(unique.IDs))
+for(i in seq_along(unique.IDs)){
+  long_all_ss[i] <- sum(df$ID==i)
+}
+
 R <- 1e4 # Set Number of Iterations
 Burnin <- R/2 # Set Number of Burn-ins
 
@@ -203,8 +208,12 @@ for(i in 1:(R-1)){
   sigmays[i+1] <- sigmays[i]#update_sigmay(covar.list,Y,as.matrix(REs[df$ID,,i],ncol=K),
   #as.matrix(coefs[,,i],ncol=K),
   #3,0.5)
+  V <- exchangable_cov(main_var = sigmays[i+1],
+                       re_var = sigmaws[i],
+                       block_sizes = long_all_ss)
+  
   coefs[,,i+1] <- update_coef(covar.list,nX,Y,as.matrix(REs[df$ID,,i],ncol=K),
-                              sigmays[i+1],
+                              V,
                               coef.prior$mean,
                               prec,samples=1)
   # new_pens <- update_pens(gamma=as.matrix(coefs[(nX+1):ncol(covar.list[[1]]),,i+1],nrow=K),
