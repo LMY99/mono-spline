@@ -7,11 +7,25 @@ s_CIs <- CI_repeat
 covered_S <- apply(s_CIs,c(1,2),function(x) (x[4]-x[2])*(x[4]-x[3])<=0)
 cover_rate_S <- apply(covered_S, 2, mean)
 ages <- seq(0,120,by=0.1)
+
+length_flex <- apply(flex_CIs,c(1,2),function(x) abs(x[3]-x[2]))
+length_S <- apply(s_CIs,c(1,2),function(x) abs(x[3]-x[2]))
+
 pdf("coverage_comparison_trueSpline_hdtg.pdf",width=14)
 plot(ages,cover_rate_flex,xlab='age',ylab='coverage',ylim=c(0,1),type='l',
-     col='red')
+     col='red',main='Pointwise Credible Band Coverage')
 lines(ages,cover_rate_S,col='blue')
 abline(h=0.95,lty=2)
-legend(100,0.6,legend=c("Flexible","S-shape"),col=c("red","blue"),
+legend('bottomright',legend=c("Flexible","S-shape","Target"),col=c("red","blue","black"),
+       lty=c(1,1,2))
+
+plot(ages,colMeans(length_flex),type='l',xlab='Age',ylab='Width',main='Pointwise Credible Band Width',
+     col='red')
+lines(ages,colMeans(length_S),col='blue')
+legend('bottomright',legend=c("Flexible","S-shape"),col=c("red","blue"),
        lty=c(1,1))
+plot(ages,colMeans(length_flex)/colMeans(length_S),type='l',xlab='Age',ylab='CI Width Ratio',
+     main='Relative Efficiency of S-shape vs Flex')
+abline(h=1,lty=2)
+
 dev.off()
