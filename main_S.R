@@ -199,7 +199,7 @@ acc <- 0 # Accepted Proposals in one batch
 lss <- ls # Sequence of LS for reference
 w <- planck_taper(ncol(B), eps=0.5) # Window Function
 w <- rep(1,ncol(B))
-#w <- NULL
+w <- NULL
 
 M_coef <- lincon(nX+dfi-4,nX)
 M_pen <- lincon(dfi-4,0)

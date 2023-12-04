@@ -196,7 +196,7 @@ acc <- 0 # Accepted Proposals in one batch
 lss <- ls # Sequence of LS for reference
 w <- planck_taper(ncol(B), eps=0.5) # Window Function
 w <- rep(1,ncol(B))
-#w <- NULL
+w <- NULL
 # Perform MCMC ----------------------------------------------------
 time0 <- proc.time()
 for(i in 1:1){
@@ -262,7 +262,7 @@ est$truth <- spline.basis %*% coef00[3:6]
 est$age <- ages
 
 CI_repeat[di,,] <- as.matrix(est)
-coef_repeat[di,,] <- t(coefs[,1,indice])
+#coef_repeat[di,,] <- t(coefs[,1,indice])
 }
 save(CI_repeat,coef_repeat,file='flex_CIs.rda')
 covered <- apply(CI_repeat,c(1,2),function(x) (x[4]-x[2])*(x[4]-x[3])<=0)
