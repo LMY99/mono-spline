@@ -48,7 +48,7 @@ for(i in 1:N){
   ))
 }
 df <- df[dplyr::between(df$ageori,0,120),]
-dfi <- 14
+dfi <- 24
 qknot <- (1:(dfi-3))/(dfi-2)
 VIF <- 0.1
 boundary.knot <- c(0,120)
@@ -99,7 +99,7 @@ K <- 1 # Number of biomarkers
 X <- as.matrix(df[,c('intercept')],ncol=1) 
 Y <- as.matrix(df[,c('Y')],ncol=1) # Biomarkers array
 t <- df$ageori # Age in original scale
-dfi <- 14 # DoF of Spline
+dfi <- 24 # DoF of Spline
 qknot <- (1:(dfi-3))/(dfi-2) # Quantiles to determine knots
 VIF <- 0.1 # Variance inflation factor for BETAKDE
 
