@@ -196,7 +196,7 @@ acc <- 0 # Accepted Proposals in one batch
 lss <- ls # Sequence of LS for reference
 w <- planck_taper(ncol(B), eps=0.5) # Window Function
 w <- rep(1,ncol(B))
-#w <- NULL
+w <- NULL
 # Perform MCMC ----------------------------------------------------
 time0 <- proc.time()
 for(i in 1:1){
