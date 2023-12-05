@@ -34,6 +34,7 @@ N <- 250
 dataset_num <- 1000
 
 CI_repeat <- array(0,dim=c(dataset_num,1201,5))
+turning <- array(0,dim=c(dataset_num,2))
 
 for(di in 1:dataset_num){
   
@@ -275,9 +276,14 @@ colnames(est) <- c("avg","lower","upper")
 est$truth <- f_sshape(ages,mode1,range_L1,range_R1)*2#f_sigmoid(ages,2,70,5)#spline.basis %*% coef00[3:6]
 est$age <- ages
 
+turning[di,] <- apply(points, 2, function(x){
+  ages[max(which(diff(x,differences=2)>=0))+1]
+}) |> coda::as.mcmc() |> coda::HPDinterval()
+
 CI_repeat[di,,] <- as.matrix(est)
 }
-save(CI_repeat,file='S_CIs.rda')
+true_turning <- mode1
+save(CI_repeat,turning,true_turning,file='S_CIs.rda')
 covered <- apply(CI_repeat,c(1,2),function(x) (x[4]-x[2])*(x[4]-x[3])<=0)
 cover_rate <- apply(covered, 2, mean)
 
