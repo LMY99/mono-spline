@@ -16,8 +16,11 @@ plot(ages,cover_rate_flex,xlab='age',ylab='coverage',ylim=c(0,1),type='l',
      col='red',main='Pointwise Credible Band Coverage')
 lines(ages,cover_rate_S,col='blue')
 abline(h=0.95,lty=2)
-legend('bottomright',legend=c("Flexible","S-shape","Target"),col=c("red","blue","black"),
-       lty=c(1,1,2))
+abline(v=mean(true_turning),lty=2,col='lightblue')
+legend('bottomright',legend=c("Flexible","S-shape","Target","True Inflection Point(Avg)"),col=c("red","blue","black","lightblue"),
+       lty=c(1,1,2,2))
+text(x=mean(true_turning),y=0,labels=sprintf("Inflection point coverage: %.3f",
+                                             mean((turning[,1]-true_turning)*(turning[,2]-true_turning)<=0)))
 
 plot(ages,colMeans(length_flex),type='l',xlab='Age',ylab='Width',main='Pointwise Credible Band Width',
      col='red')
