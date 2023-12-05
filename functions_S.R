@@ -332,20 +332,21 @@ puMVN <- function(mu,V,q,Ms,k=NULL,eps=1e-2,log=T,verbose=FALSE){
 # Functions for Updating Parameters
 # Update BETA and GAMMA together
 # RE is the replicated random effects, and should always be the same dimension as Y
-update_coef <- function(covars.list,nX,Y,RE,sigmay,prior.mean,prior.precision,Ms,verbose=FALSE,
+update_coef <- function(covars.list,nX,Y,RE,V,prior.mean,prior.precision,Ms,verbose=FALSE,
                         samples=1){
   require(matrixStats)
-  require(Rmpfr)
   res <- array(0,c(samples,ncol(covars.list[[1]]),ncol(Y)))
   inflex_prob <- matrix(0,dim(res)[1]-nX,ncol(Y))
   for(k in 1:ncol(Y)){
-    CC <- covars.list[[k]][!is.na(Y[,k]-RE[,k]),]
-    precision <- prior.precision + t(CC)%*%CC/sigmay
-    variance <- chol2inv(chol(precision))
+    non_mis <- !is.na(Y[,k])
+    CC <- covars.list[[k]][non_mis,]
+    lik_prec <- solve(V[non_mis,non_mis])
+    precision <- prior.precision + t(CC)%*%lik_prec%*%CC
+    variance <- solve(precision)
     
     mu <- as.vector(precision%*%prior.mean)
-    CY <- covars.list[[k]]*as.vector(Y[,k]-RE[,k])
-    mu <- mu + apply(CY,2,sum,na.rm=TRUE)/sigmay
+    mu <- mu + t(CC)%*%lik_prec%*%Y[,k][non_mis]
+    
     mu <- as.vector(variance%*%mu)
     logp <- puMVN(mu,variance,nX,Ms,log=T,verbose=verbose)
     logp <- logp - max(logp)
