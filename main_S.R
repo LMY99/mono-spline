@@ -34,7 +34,7 @@ N <- 250
 dataset_num <- 1000
 
 CI_repeat <- array(0,dim=c(dataset_num,1201,5))
-turning <- array(0,dim=c(dataset_num,2))
+turning <- array(0,dim=c(dataset_num,3))
 
 for(di in 1:dataset_num){
   
@@ -276,9 +276,12 @@ colnames(est) <- c("avg","lower","upper")
 est$truth <- spline.basis %*% coef00[3:6]
 est$age <- ages
 
-turning[di,] <- apply(points, 2, function(x){
+turning[di,1:2] <- apply(points, 2, function(x){
   ages[max(which(diff(x,differences=2)>=0))+1]
 }) |> coda::as.mcmc() |> coda::HPDinterval()
+turning[di,3] <- apply(points, 2, function(x){
+  ages[max(which(diff(x,differences=2)>=0))+1]
+}) |> mean()
 
 CI_repeat[di,,] <- as.matrix(est)
 
