@@ -31,7 +31,7 @@ mean1 <- 70; sd1 <- 5; mean2 <- 100; sd2 <- 5; p1 <- 0.4; p2 <- 0.6
 
 N <- 250
 
-dataset_num <- 1000
+dataset_num <- 100
 
 CI_repeat <- array(0,dim=c(dataset_num,1201,5))
 turning <- array(0,dim=c(dataset_num,3))
