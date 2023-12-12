@@ -49,7 +49,7 @@ for(i in 1:N){
   ))
 }
 df <- df[dplyr::between(df$ageori,0,120),]
-dfi <- 24
+dfi <- 8
 qknot <- (1:(dfi-3))/(dfi-2)
 VIF <- 0.1
 boundary.knot <- c(0,120)
@@ -76,8 +76,8 @@ Y <- Y + truthRE[df$id,]
 coef00 <- c(0,0,c(1,4,7,1)/100,0,0)
 B00 <- splines2::ibs(df$ageori,knots=knot,degree=2,intercept=TRUE,Boundary.knots=c(0,120))
 
-Y[,1] <- Y[,1] + f_sigmoid(df$ageori,2,70,5) #B00 %*% coef00
-Y[,2] <- Y[,2] + f_sshape(df$ageori,mode1,range_L1,range_R1)*2
+Y[,1] <- Y[,1] + B00 %*% coef00
+Y[,2] <- Y[,2] + f_sshape(df$ageori,mode1,range_L1,range_R1)
 Y[,3] <- Y[,3] + f_wiggle(df$ageori,mean1,sd1,mean2,sd2,p1,p2)
 colnames(Y) <- c('Y1','Y2','Y3')
 
@@ -86,9 +86,9 @@ for(i in 1:nrow(Y))
   for(j in 1:ncol(Y))
     if(mis[i,j]) Y[i,j] <- NA
 
-Y <- Y[,2]
-mis <- mis[,2]
-truthRE <- truthRE[df$id,2]
+Y <- Y[,1]
+mis <- mis[,1]
+truthRE <- truthRE[df$id,1]
 df <- cbind(df,Y,truthRE)
 
 usePackage("splines2")
@@ -102,7 +102,7 @@ X <- as.matrix(df[,X_names],ncol=nX)
 
 Y <- as.matrix(df[,c('Y')],ncol=1) # Biomarkers array
 t <- df$ageori # Age in original scale
-dfi <- 24 # DoF of Spline
+dfi <- 8 # DoF of Spline
 qknot <- (1:(dfi-3))/(dfi-2) # Quantiles to determine knots
 VIF <- 0.1 # Variance inflation factor for BETAKDE
 
@@ -261,7 +261,7 @@ est <- apply(points,1,function(x) c(mean(x),
                                     coda::HPDinterval(coda::as.mcmc(x))))
 est <- data.frame(t(est))
 colnames(est) <- c("avg","lower","upper")
-est$truth <- f_sshape(ages,mode1,range_L1,range_R1)*2#f_sigmoid(ages,2,70,5)#spline.basis %*% coef00[3:6]
+est$truth <- spline.basis %*% coef00[3:6]
 est$age <- ages
 
 CI_repeat[di,,] <- as.matrix(est)
