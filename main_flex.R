@@ -16,11 +16,11 @@ p_binary_covars <- c(1,0.5)
 random_effect_var <- 0.04
 residual_var <- 0.01
 
-# true_fixed_effect <- matrix(c(+0.4,+0.4,-0.5,
-#                               -0.5,-0.5,+0.1,
-#                               +0.1,+0.1,+0.5,
-#                               -0.1,-0.1,+0.6),nrow = 4,ncol = 3,byrow=TRUE)
-true_fixed_effect <- matrix(c(0,0,0),1,3)
+true_fixed_effect <- matrix(c(+0.4,+0.4,-0.5,
+                              -0.5,-0.5,+0.1,
+                              +0.1,+0.1,+0.5,
+                              -0.1,-0.1,+0.6),nrow = 4,ncol = 3,byrow=TRUE)
+# true_fixed_effect <- matrix(c(0,0,0),1,3)
 a0 <- 1; b0 <- 70; d0 <- 5
 mode1<-50; range_L1 <- 30; range_R1 <- 100
 mean1 <- 70; sd1 <- 5; mean2 <- 100; sd2 <- 5; p1 <- 0.4; p2 <- 0.6
@@ -31,6 +31,7 @@ dataset_num <- 100
 
 CI_repeat <- array(0,dim=c(dataset_num,1201,5))
 # coef_repeat <- array(0,dim=c(dataset_num,5000,5))
+CI_covariate_repeat <- array(0,dim=c(dataset_num,nrow(true_fixed_effect),4))
 
 for(di in 1:dataset_num){
 
@@ -57,16 +58,17 @@ t01 <- t01[dplyr::between(t01,0,1)]
 knot <- betaKDE(t01,s=VIF,q=qknot)$quantile
 knot <- (boundary.knot[2]-boundary.knot[1])*knot+boundary.knot[1]
 
-# X <- cbind(X1=rbinom(N,1,p_binary_covars[1]),
-#            X2=rbinom(N,1,p_binary_covars[2]),
-#            X3=rnorm(N),
-#            X4=rnorm(N))
+X <- cbind(X1=rbinom(N,1,p_binary_covars[1]),
+           X2=rbinom(N,1,p_binary_covars[2]),
+           X3=rnorm(N),
+           X4=rnorm(N))
+X_names <- colnames(X)
 # X <- matrix(0, nrow(X), ncol(X))
-X <- matrix(rep(1,N),N,1)
-colnames(X) <- c('intercept')
-df <- cbind(df, intercept=X[df$id,])
+# X <- matrix(rep(1,N),N,1)
+# colnames(X) <- c('intercept')
+df <- cbind(df, X[df$id,])
 
-Y <- as.matrix(df[c('intercept')]) %*% true_fixed_effect
+Y <- as.matrix(df[,X_names]) %*% true_fixed_effect
 truthRE <- matrix(rnorm(N*3,sd=sqrt(random_effect_var)),nrow=N,ncol=ncol(Y))
 Y <- Y + matrix(rnorm(length(Y),sd=sqrt(residual_var)),nrow=nrow(Y),ncol=ncol(Y))
 Y <- Y + truthRE[df$id,]
@@ -96,7 +98,8 @@ df <- df
 
 K <- 1 # Number of biomarkers
 # All non-age covariates
-X <- as.matrix(df[,c('intercept')],ncol=1) 
+X <- as.matrix(df[,X_names],ncol=nX) 
+
 Y <- as.matrix(df[,c('Y')],ncol=1) # Biomarkers array
 t <- df$ageori # Age in original scale
 dfi <- 24 # DoF of Spline
@@ -150,8 +153,8 @@ Burnin <- R/2 # Set Number of Burn-ins
 # Set Priors -----------------------------------------------------
 # Beta parameter: Coefficients for adjusting covariates
 beta.prior <- list(mean=rep(0,ncol(X)),
-                   #variance=diag(rep(10000,ncol(X))),
-                   variance=10000,
+                   variance=diag(rep(10000,ncol(X))),
+                   #variance=10000,
                    precision=NULL)
 beta.prior$precision <- solve(beta.prior$variance)
 # Gamma parameter: Coefficients for splines
@@ -263,7 +266,12 @@ est$age <- ages
 
 CI_repeat[di,,] <- as.matrix(est)
 #coef_repeat[di,,] <- t(coefs[,1,indice])
+
+CI_covariate_repeat[di,,1:3] <- t(apply(coefs[1:nX,1,indice],1,
+                         function(x) c(mean(x),coda::HPDinterval(coda::as.mcmc(x)))))
+CI_covariate_repeat[di,,4] <- c(0.4,-0.5,0.1,-0.1)
+
 }
-save(CI_repeat,file='flex_CIs.rda')
+save(CI_repeat,CI_covariate_repeat,file='flex_CIs.rda')
 covered <- apply(CI_repeat,c(1,2),function(x) (x[4]-x[2])*(x[4]-x[3])<=0)
 cover_rate <- apply(covered, 2, mean)
