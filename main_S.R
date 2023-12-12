@@ -268,7 +268,7 @@ spline.basis <- splines2::ibs(pmin(pmax(ages,min(boundary.knot)),max(boundary.kn
                               knots=knot.list[[1]], Boundary.knots = boundary.knot, 
                               degree=2, intercept=TRUE)
 spline.basis <- spline.basis[,3:(dfi-2)]
-points <- spline.basis %*% coefs[-(1),1,indice]
+points <- spline.basis %*% coefs[-(1:nX),1,indice]
 est <- apply(points,1,function(x) c(mean(x),
                                     coda::HPDinterval(coda::as.mcmc(x))))
 est <- data.frame(t(est))
