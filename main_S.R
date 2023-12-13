@@ -38,7 +38,7 @@ turning <- array(0,dim=c(dataset_num,3))
 CI_covariate_repeat <- array(0,dim=c(dataset_num,nrow(true_fixed_effect),4))
 true_turning <- rep(0, dataset_num)
 
-coef_repeat_S <- array(0,dim=c(dataset_num,5000,4+4))
+#coef_repeat_S <- array(0,dim=c(dataset_num,5000,4+4))
 
 for(di in 1:dataset_num){
   
@@ -296,9 +296,9 @@ CI_covariate_repeat[di,,4] <- c(0.4,-0.5,0.1,-0.1)
 
 true_turning[di] <- ages[max(which(diff(est$truth,differences=2)>=0))+1]
 
-coef_repeat_S[di,,] <- t(coefs[,1,indice])
+#coef_repeat_S[di,,] <- t(coefs[,1,indice])
 }
-save(CI_repeat,turning,true_turning,CI_covariate_repeat,coef_repeat_S,file='S_CIs.rda')
+save(CI_repeat,turning,true_turning,CI_covariate_repeat,file='S_CIs.rda')
 covered <- apply(CI_repeat,c(1,2),function(x) (x[4]-x[2])*(x[4]-x[3])<=0)
 cover_rate <- apply(covered, 2, mean)
 
