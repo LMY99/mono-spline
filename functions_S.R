@@ -359,10 +359,10 @@ update_coef <- function(covars.list,nX,Y,RE,V,prior.mean,prior.precision,Ms,verb
     #                  prob=exp(logp)
     #                  )
     # res[,k] <- ruMVN(1,mu,variance,nX,inflex,Ms)
-    res[,,k] <- hdtg_S(samples,mu,variance,ifelse(nX>0,1:nX,NULL))
+    # res[,,k] <- hdtg_S(samples,mu,variance,ifelse(nX>0,1:nX,NULL))
     #ep <- exp(logp)
     #inflex_prob[,k] <- logp#ep/sum(ep)
-    # res[,k] <- rtMVN(mu,variance,(nX+1):length(mu),SShape=TRUE)
+    res[,,k] <- t(replicate(samples,rtMVN(mu,variance,(nX+1):length(mu),SShape=TRUE)))
   }
   return(list(res=res,inflex_prob=inflex_prob))
 }
