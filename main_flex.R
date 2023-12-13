@@ -33,6 +33,8 @@ CI_repeat <- array(0,dim=c(dataset_num,1201,5))
 # coef_repeat <- array(0,dim=c(dataset_num,5000,5))
 CI_covariate_repeat <- array(0,dim=c(dataset_num,nrow(true_fixed_effect),4))
 
+coef_repeat_flex <- array(0,dim=c(dataset_num,5000,4+4))
+
 for(di in 1:dataset_num){
 
 cat(sprintf("%d:\n ",di))
@@ -271,7 +273,9 @@ CI_covariate_repeat[di,,1:3] <- t(apply(coefs[1:nX,1,indice],1,
                          function(x) c(mean(x),coda::HPDinterval(coda::as.mcmc(x)))))
 CI_covariate_repeat[di,,4] <- c(0.4,-0.5,0.1,-0.1)
 
+coef_repeat_flex[di,,] <- t(coefs[,1,indice])
+
 }
-save(CI_repeat,CI_covariate_repeat,file='flex_CIs.rda')
+save(CI_repeat,CI_covariate_repeat,coef_repeat_flex,file='flex_CIs.rda')
 covered <- apply(CI_repeat,c(1,2),function(x) (x[4]-x[2])*(x[4]-x[3])<=0)
 cover_rate <- apply(covered, 2, mean)
