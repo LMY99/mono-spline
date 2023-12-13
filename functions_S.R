@@ -348,8 +348,8 @@ update_coef <- function(covars.list,nX,Y,RE,V,prior.mean,prior.precision,Ms,verb
     mu <- mu + t(CC)%*%lik_prec%*%Y[,k][non_mis]
     
     mu <- as.vector(variance%*%mu)
-    logp <- puMVN(mu,variance,nX,Ms,log=T,verbose=verbose)
-    logp <- logp - max(logp)
+    #logp <- puMVN(mu,variance,nX,Ms,log=T,verbose=verbose)
+    #logp <- logp - max(logp)
     #logp0 <- logp - matrixStats::logSumExp(logp)
     #if(any(is.na(logp0)))
     #  {print(logp);print(logp0)}
