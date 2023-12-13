@@ -2,18 +2,21 @@ load("flex_CIs.rda")
 flex_CIs <- CI_repeat
 covered_flex <- apply(flex_CIs,c(1,2),function(x) (x[4]-x[2])*(x[4]-x[3])<=0)
 cover_rate_flex <- apply(covered_flex, 2, mean)
-sink("Covariate coverage.txt")
-cat("Coverage of coefficient for covariates:\n")
+sink("Covariate and RE coverage.txt")
 cat("Target: 0.95\n")
-cat("Flexible model:\n")
+cat("Flexible model(Covariate):\n")
 cat(apply(apply(CI_covariate_repeat,c(1,2),function(x)(x[4]-x[2])*(x[4]-x[3])<=0),2,mean))
+cat("\nFlexible model(RE):\n")
+cat(mean(apply(RE_repeat,c(1,2),function(x)(x[4]-x[2])*(x[4]-x[3])<=0)))
 
 load("S_CIs.rda")
 s_CIs <- CI_repeat
 covered_S <- apply(s_CIs,c(1,2),function(x) (x[4]-x[2])*(x[4]-x[3])<=0)
 cover_rate_S <- apply(covered_S, 2, mean)
-cat("\nS-Shaped model:\n")
+cat("\nS-Shaped model(Covariate):\n")
 cat(apply(apply(CI_covariate_repeat,c(1,2),function(x)(x[4]-x[2])*(x[4]-x[3])<=0),2,mean))
+cat("\nS-Shaped model(RE):\n")
+cat(mean(apply(RE_repeat,c(1,2),function(x)(x[4]-x[2])*(x[4]-x[3])<=0)))
 
 sink()
 
