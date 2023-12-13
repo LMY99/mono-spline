@@ -348,8 +348,8 @@ update_coef <- function(covars.list,nX,Y,RE,V,prior.mean,prior.precision,Ms,verb
     mu <- mu + t(CC)%*%lik_prec%*%Y[,k][non_mis]
     
     mu <- as.vector(variance%*%mu)
-    logp <- puMVN(mu,variance,nX,Ms,log=T,verbose=verbose)
-    logp <- logp - max(logp)
+    #logp <- puMVN(mu,variance,nX,Ms,log=T,verbose=verbose)
+    #logp <- logp - max(logp)
     #logp0 <- logp - matrixStats::logSumExp(logp)
     #if(any(is.na(logp0)))
     #  {print(logp);print(logp0)}
@@ -359,10 +359,12 @@ update_coef <- function(covars.list,nX,Y,RE,V,prior.mean,prior.precision,Ms,verb
     #                  prob=exp(logp)
     #                  )
     # res[,k] <- ruMVN(1,mu,variance,nX,inflex,Ms)
-    res[,,k] <- hdtg_S(samples,mu,variance,ifelse(nX>0,1:nX,NULL))
+    if(nX>0) free_indice <- 1:nX
+    else free_indice <- NULL
+    res[,,k] <- hdtg_S(samples,mu,variance,free_indice)
     #ep <- exp(logp)
     #inflex_prob[,k] <- logp#ep/sum(ep)
-    # res[,k] <- rtMVN(mu,variance,(nX+1):length(mu),SShape=TRUE)
+    #res[,,k] <- t(replicate(samples,rtMVN(mu,variance,(nX+1):length(mu),SShape=TRUE)))
   }
   return(list(res=res,inflex_prob=inflex_prob))
 }
