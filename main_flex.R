@@ -35,6 +35,8 @@ CI_covariate_repeat <- array(0,dim=c(dataset_num,nrow(true_fixed_effect),4))
 
 #coef_repeat_flex <- array(0,dim=c(dataset_num,5000,4+4))
 
+RE_repeat <- array(0,dim=c(dataset_num,N,4))
+
 for(di in 1:dataset_num){
 
 cat(sprintf("%d:\n ",di))
@@ -90,8 +92,8 @@ for(i in 1:nrow(Y))
 
 Y <- Y[,1]
 mis <- mis[,1]
-truthRE <- truthRE[df$id,1]
-df <- cbind(df,Y,truthRE)
+truthRE0 <- truthRE[df$id,1]
+df <- cbind(df,Y,truthRE0)
 
 usePackage("splines2")
 usePackage("TruncatedNormal")
@@ -245,11 +247,17 @@ for(i in 1:1){
   #pens[,i+1] <- pens[,i]
   pens[,i+1] <- pens[,i]
   
-  REs[,,i+1] <- update_W(covar.list,Y,as.matrix(coefs[,,i+1],ncol=K),long_ss,
-                         df$ID,sigmays[i+1],sigmaws[i])
+  # REs[,,i+1] <- update_W(covar.list,Y,as.matrix(coefs[,,i+1],ncol=K),long_ss,
+  #                        df$ID,sigmays[i+1],sigmaws[i])
   
   sigmaws[i+1] <- sigmaws[i]#update_sigmaw(REs[,,i+1],3,0.5)
 }
+for(i in 1:(R-1)){
+  REs[,,i+1] <- update_W(covar.list,Y,as.matrix(coefs[,,i+1],ncol=K),long_ss,
+                         df$ID,sigmays[i+1],sigmaws[i])
+}
+
+
 ages <- seq(0,120,by=0.1)
 points <- array(0,c(length(ages),R-Burnin))
 
@@ -275,7 +283,11 @@ CI_covariate_repeat[di,,4] <- c(0.4,-0.5,0.1,-0.1)
 
 #coef_repeat_flex[di,,] <- t(coefs[,1,indice])
 
+RE_repeat[di,,1:3] <- t(apply(REs,c(1,2),
+                            function(x) c(mean(x),coda::HPDinterval(coda::as.mcmc(x))))[,,1])
+RE_repeat[di,,4] <- truthRE[,1]
+
 }
-save(CI_repeat,CI_covariate_repeat,file='flex_CIs.rda')
+save(CI_repeat,CI_covariate_repeat,RE_repeat,file='flex_CIs.rda')
 covered <- apply(CI_repeat,c(1,2),function(x) (x[4]-x[2])*(x[4]-x[3])<=0)
 cover_rate <- apply(covered, 2, mean)

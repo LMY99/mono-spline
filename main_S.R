@@ -40,6 +40,8 @@ true_turning <- rep(0, dataset_num)
 
 #coef_repeat_S <- array(0,dim=c(dataset_num,5000,4+4))
 
+RE_repeat <- array(0,dim=c(dataset_num,N,4))
+
 for(di in 1:dataset_num){
   
 cat(di);cat(":\n")
@@ -95,8 +97,8 @@ for(i in 1:nrow(Y))
 
 Y <- Y[,1]
 mis <- mis[,1]
-truthRE <- truthRE[df$id,1]
-df <- cbind(df,Y,truthRE)
+truthRE0 <- truthRE[df$id,1]
+df <- cbind(df,Y,truthRE0)
 # Loading Data ---------------------------------------------------
 df <- df
 
@@ -259,10 +261,14 @@ for(i in 1:(1)){
   # }
   pens[,i+1] <- pens[,i]
   current <- "Random Effect"
-  REs[,,i+1] <- update_W(covar.list,Y,as.matrix(coefs[,,i+1],ncol=K),long_ss,
-                         df$ID,sigmays[i+1],sigmaws[i])
+  # REs[,,i+1] <- update_W(covar.list,Y,as.matrix(coefs[,,i+1],ncol=K),long_ss,
+  #                        df$ID,sigmays[i+1],sigmaws[i])
   current <- "Sigma_W"
   sigmaws[i+1] <- sigmaws[i]#update_sigmaw(REs[,,i+1],3,0.5)
+}
+for(i in 1:(R-1)){
+  REs[,,i+1] <- update_W(covar.list,Y,as.matrix(coefs[,,i+1],ncol=K),long_ss,
+                         df$ID,sigmays[i+1],sigmaws[i])
 }
 
 ages <- seq(0,120,by=0.1)
@@ -297,8 +303,11 @@ CI_covariate_repeat[di,,4] <- c(0.4,-0.5,0.1,-0.1)
 true_turning[di] <- ages[max(which(diff(est$truth,differences=2)>=0))+1]
 
 #coef_repeat_S[di,,] <- t(coefs[,1,indice])
+RE_repeat[di,,1:3] <- t(apply(REs,c(1,2),
+                              function(x) c(mean(x),coda::HPDinterval(coda::as.mcmc(x))))[,,1])
+RE_repeat[di,,4] <- truthRE[,1]
 }
-save(CI_repeat,turning,true_turning,CI_covariate_repeat,file='S_CIs.rda')
+save(CI_repeat,turning,true_turning,CI_covariate_repeat,RE_repeat,file='S_CIs.rda')
 covered <- apply(CI_repeat,c(1,2),function(x) (x[4]-x[2])*(x[4]-x[3])<=0)
 cover_rate <- apply(covered, 2, mean)
 
