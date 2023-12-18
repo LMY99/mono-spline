@@ -1,4 +1,4 @@
-set.seed(327)
+set.seed(2)
 source("functions_S.R")
 usePackage("splines2")
 usePackage("TruncatedNormal")
@@ -33,7 +33,7 @@ N <- 250
 
 dataset_num <- 100
 
-CI_repeat <- array(0,dim=c(dataset_num,1201,5))
+CI_repeat <- array(0,dim=c(dataset_num,1201,6))
 turning <- array(0,dim=c(dataset_num,3))
 CI_covariate_repeat <- array(0,dim=c(dataset_num,nrow(true_fixed_effect),4))
 true_turning <- rep(0, dataset_num)
@@ -41,6 +41,8 @@ true_turning <- rep(0, dataset_num)
 #coef_repeat_S <- array(0,dim=c(dataset_num,5000,4+4))
 
 RE_repeat <- array(0,dim=c(dataset_num,N,4))
+# RE + fixed intercept
+offset_repeat <- array(0,dim=c(dataset_num,N,4))
 
 for(di in 1:dataset_num){
   
@@ -151,7 +153,7 @@ for(i in seq_along(unique.IDs)){
   long_all_ss[i] <- sum(df$ID==i)
 }
 
-R <- 1e4 # Set Number of Iterations
+R <- 1e3 # Set Number of Iterations
 Burnin <- R/2 # Set Number of Burn-ins
 
 
@@ -183,6 +185,7 @@ sigmays <- rep(0,R)
 sigmaws <- rep(0,R)
 pens <- array(0, c(2, R))
 REs <- array(0, c(dim(long_ss),R))
+offsets <- array(0, c(dim(long_ss),R))
 
 coefs[1:nX,,1] <- 
   t(rtmvnorm(ncol(Y),mu=beta.prior$mean,
@@ -271,6 +274,12 @@ for(i in 1:(R-1)){
                          df$ID,sigmays[i+1],sigmaws[i])
 }
 
+for(i in 1:R){
+  for(k in 1:K){
+  offsets[,k,i] <- REs[,k,i] + coefs[1,k,i]
+  }
+}
+
 ages <- seq(0,120,by=0.1)
 points <- array(0,c(length(ages),R-Burnin))
 
@@ -282,10 +291,12 @@ spline.basis <- spline.basis[,3:(dfi-2)]
 points <- spline.basis %*% coefs[-(1:nX),1,indice]
 est <- apply(points,1,function(x) c(mean(x),
                                     coda::HPDinterval(coda::as.mcmc(x))))
+var_est <- apply(points,1,var)
 est <- data.frame(t(est))
 colnames(est) <- c("avg","lower","upper")
 est$truth <- spline.basis %*% coef00[3:6]
 est$age <- ages
+est$MSE <- (est$avg - est$truth)^2+var_est
 
 turning[di,1:2] <- apply(points, 2, function(x){
   ages[max(which(diff(x,differences=2)>=0))+1]
@@ -306,8 +317,13 @@ true_turning[di] <- ages[max(which(diff(est$truth,differences=2)>=0))+1]
 RE_repeat[di,,1:3] <- t(apply(REs,c(1,2),
                               function(x) c(mean(x),coda::HPDinterval(coda::as.mcmc(x))))[,,1])
 RE_repeat[di,,4] <- truthRE[,1]
+
+offset_repeat[di,,1:3] <- t(apply(offsets,c(1,2),
+                              function(x) c(mean(x),coda::HPDinterval(coda::as.mcmc(x))))[,,1])
+offset_repeat[di,,4] <- truthRE[,1] + 0.4
+
 }
-save(CI_repeat,turning,true_turning,CI_covariate_repeat,RE_repeat,file='S_CIs.rda')
+save(CI_repeat,turning,true_turning,CI_covariate_repeat,RE_repeat,offset_repeat,file='S_CIs.rda')
 covered <- apply(CI_repeat,c(1,2),function(x) (x[4]-x[2])*(x[4]-x[3])<=0)
 cover_rate <- apply(covered, 2, mean)
 
