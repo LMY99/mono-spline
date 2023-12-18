@@ -151,7 +151,7 @@ for(i in seq_along(unique.IDs)){
   long_all_ss[i] <- sum(df$ID==i)
 }
 
-R <- 1e4 # Set Number of Iterations
+R <- 1e2 # Set Number of Iterations
 Burnin <- R/2 # Set Number of Burn-ins
 
 
@@ -214,26 +214,23 @@ M_pen <- lincon(dfi-4,0)
 
 # Perform MCMC ----------------------------------------------------
 # i <- 1
-for(i in 1:(1)){
+for(i in 1:(R-1)){
  if((i+1)%%(R/10)==0) cat(sprintf("%03d%% ",(i+1)/(R/100)))
  if((i+1)%%(R/1)==0) cat("\n")
   verbose=FALSE
   prec <- block_Matrix(beta.prior$precision,
                        penalty_Matrix(ncol(B),pens[1,i],pens[2,i],
                                       weight=w)$prec)
-  current <- "Sigma_Y"
-  sigmays[i+1] <- sigmays[i]#update_sigmay(covar.list,Y,as.matrix(REs[df$ID,,i],ncol=1),
-  #as.matrix(coefs[,,i],ncol=1),
-  #3,0.5)
-  current <- "Coefs"
-  V <- exchangable_cov(main_var = sigmays[i+1],
-                       re_var = sigmaws[i],
-                       block_sizes = long_all_ss)
+  sigmays[i+1] <- update_sigmay(covar.list,Y,as.matrix(REs[df$ID,,i],ncol=1),
+  as.matrix(coefs[,,i],ncol=1),
+  3,0.5)
   u <- update_coef(covar.list,nX,Y,as.matrix(REs[df$ID,,i],ncol=1),
-                   V,
+                   sigmays[i+1],sigmaws[i],df$ID,
                    coef.prior$mean,
-                   prec,M_coef,verbose,samples=R)
-  coefs[,,1:R] <- aperm(u$res,c(2,3,1))
+                   prec,M_coef,verbose,samples=1)
+  coefs[,,i+1] <- aperm(u$res,c(2,3,1))
+  REs[,,i+1] <- update_W(covar.list,Y,as.matrix(coefs[,,i+1],ncol=K),long_ss,
+                         df$ID,sigmays[i+1],sigmaws[i])
   #inflex_prob[,,i+1] <- u$inflex_prob
   # current <- "Penalty"
   # new_pens <- update_pens(gamma=as.matrix(coefs[(nX+1):ncol(covar.list[[1]]),,i+1],ncol=1),
@@ -260,15 +257,7 @@ for(i in 1:(1)){
   #   lss <- c(lss, ls)
   # }
   pens[,i+1] <- pens[,i]
-  current <- "Random Effect"
-  # REs[,,i+1] <- update_W(covar.list,Y,as.matrix(coefs[,,i+1],ncol=K),long_ss,
-  #                        df$ID,sigmays[i+1],sigmaws[i])
-  current <- "Sigma_W"
-  sigmaws[i+1] <- sigmaws[i]#update_sigmaw(REs[,,i+1],3,0.5)
-}
-for(i in 1:(R-1)){
-  REs[,,i+1] <- update_W(covar.list,Y,as.matrix(coefs[,,i+1],ncol=K),long_ss,
-                         df$ID,sigmays[i+1],sigmaws[i])
+  sigmaws[i+1] <- update_sigmaw(REs[,,i+1],3,0.5)
 }
 
 ages <- seq(0,120,by=0.1)

@@ -142,12 +142,17 @@ rtMVN <- function(mean,Sigma,posit=1:length(mean),
 # Update BETA and GAMMA together----
 # RE is the replicated random effects
 # RE should always be the same dimension as Y
-update_coef <- function(covars.list,nX,Y,RE,V,prior.mean,prior.precision,samples=1){
+update_coef <- function(covars.list,nX,Y,RE,sy,sw,id,prior.mean,prior.precision,samples=1,burnin=5){
   res <- array(0,c(samples,ncol(covars.list[[1]]),ncol(Y)))
+  unique_id <- unique(id)
   for(k in 1:ncol(Y)){
     non_mis <- !is.na(Y[,k])
     CC <- covars.list[[k]][non_mis,]
-    lik_prec <- solve(V[non_mis,non_mis])
+    comp_id <- id[non_mis]
+    block_size <- integer(length(unique_id))
+    for(j in 1:length(block_size))
+      block_size[j] <- sum(comp_id==j)
+    lik_prec <- exchangable_cov(sy,sw,block_size)$Prec
     precision <- prior.precision + t(CC)%*%lik_prec%*%CC
     variance <- solve(precision)
     
@@ -159,9 +164,9 @@ update_coef <- function(covars.list,nX,Y,RE,V,prior.mean,prior.precision,samples
     #                     lb=c(rep(-Inf,nX),rep(0,ncol(covars.list[[k]])-nX))
     # )
     # res[,k] <- rtMVN(mu,variance,(nX+1):length(mu),FALSE)
-    res[,,k] <- hdtg::harmonicHMC(samples,100,mu,chol(variance),
+    res[,,k] <- hdtg::harmonicHMC(samples,burnin,mu,chol(variance),
                                  diag(length(mu))[-(1:nX),],rep(0,length(mu)-nX),
-                                 rep(0.1,length(mu)),precFlg=FALSE)$samples[101:(100+samples),]
+                                 rep(0.1,length(mu)),precFlg=FALSE)$samples[(burnin+1):(burnin+samples),]
   }
   return(res)
 }

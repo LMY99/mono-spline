@@ -242,7 +242,7 @@ ruMVN <- function(n,mu,V,q,k,Ms,burnin=100){
   
 }
 
-hdtg_S <- function(n,mu,sigma,free=NULL,burnin=100){
+hdtg_S <- function(n,mu,sigma,free=NULL,burnin=5){
   p <- length(mu)
   if(is.null(free)) res_index <- 1:p
   else res_index <- (1:p)[-free]
@@ -278,7 +278,7 @@ hdtg_S <- function(n,mu,sigma,free=NULL,burnin=100){
     if(i<p_res) init[res_index][(i+1):p_res] <- sort(init[res_index][(i+1):p_res],decreasing=TRUE)
     result[inflex.points==i,] <- hdtg::harmonicHMC(n=pnums,burnin=burnin,
                                                    mean=mu,choleskyFactor=chol(sigma),
-                                                   F=Fmat,g=g,init=init,precFlg=FALSE)$samples[101:(100+pnums),]
+                                                   F=Fmat,g=g,init=init,precFlg=FALSE)$samples[(burnin+1):(burnin+pnums),]
   }
   if(n==1) return(as.vector(result))
   else return(result)
@@ -332,15 +332,19 @@ puMVN <- function(mu,V,q,Ms,k=NULL,eps=1e-2,log=T,verbose=FALSE){
 # Functions for Updating Parameters
 # Update BETA and GAMMA together
 # RE is the replicated random effects, and should always be the same dimension as Y
-update_coef <- function(covars.list,nX,Y,RE,V,prior.mean,prior.precision,Ms,verbose=FALSE,
-                        samples=1){
+update_coef <- function(covars.list,nX,Y,RE,sy,sw,id,prior.mean,prior.precision,Ms,verbose=FALSE,
+                        samples=1,burnin=5){
   require(matrixStats)
   res <- array(0,c(samples,ncol(covars.list[[1]]),ncol(Y)))
-  inflex_prob <- matrix(0,dim(res)[1]-nX,ncol(Y))
+  unique_id <- unique(id)
   for(k in 1:ncol(Y)){
     non_mis <- !is.na(Y[,k])
     CC <- covars.list[[k]][non_mis,]
-    lik_prec <- solve(V[non_mis,non_mis])
+    comp_id <- id[non_mis]
+    block_size <- integer(length(unique_id))
+    for(j in 1:length(block_size))
+      block_size[j] <- sum(comp_id==j)
+    lik_prec <- exchangable_cov(sy,sw,block_size)$Prec
     precision <- prior.precision + t(CC)%*%lik_prec%*%CC
     variance <- solve(precision)
     
@@ -361,12 +365,12 @@ update_coef <- function(covars.list,nX,Y,RE,V,prior.mean,prior.precision,Ms,verb
     # res[,k] <- ruMVN(1,mu,variance,nX,inflex,Ms)
     if(nX>0) free_indice <- 1:nX
     else free_indice <- NULL
-    res[,,k] <- hdtg_S(samples,mu,variance,free_indice)
+    res[,,k] <- hdtg_S(samples,mu,variance,free_indice,burnin)
     #ep <- exp(logp)
     #inflex_prob[,k] <- logp#ep/sum(ep)
     #res[,,k] <- t(replicate(samples,rtMVN(mu,variance,(nX+1):length(mu),SShape=TRUE)))
   }
-  return(list(res=res,inflex_prob=inflex_prob))
+  return(list(res=res))
 }
 # Update SIGMA_Y----
 update_sigmay <- function(covars.list,Y,RE,coefs,prior.shape,prior.scale){
