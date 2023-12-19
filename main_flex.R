@@ -297,6 +297,9 @@ offset_repeat[di,,1:3] <- t(apply(offsets,c(1,2),
 offset_repeat[di,,4] <- truthRE[,1] + 0.4
 
 }
-save(CI_repeat,CI_covariate_repeat,RE_repeat,offset_repeat,file='flex_CIs.rda')
+sy <- sigmays[indice]; true_sy <- residual_var
+sw <- sigmaws[indice]; true_sw <- random_effect_var
+save(CI_repeat,CI_covariate_repeat,RE_repeat,offset_repeat,
+     sy,true_sy,sw,true_sw,file='flex_CIs.rda')
 covered <- apply(CI_repeat,c(1,2),function(x) (x[4]-x[2])*(x[4]-x[3])<=0)
 cover_rate <- apply(covered, 2, mean)
