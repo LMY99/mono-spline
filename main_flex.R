@@ -33,7 +33,7 @@ CI_repeat <- array(0,dim=c(dataset_num,1201,6))
 # coef_repeat <- array(0,dim=c(dataset_num,5000,5))
 CI_covariate_repeat <- array(0,dim=c(dataset_num,nrow(true_fixed_effect),4))
 
-coef_repeat_flex <- array(0,dim=c(dataset_num,5000,4+20))
+#coef_repeat_flex <- array(0,dim=c(dataset_num,5000,4+4))
 
 RE_repeat <- array(0,dim=c(dataset_num,N,4))
 # RE + fixed intercept
@@ -55,7 +55,7 @@ for(i in 1:N){
   ))
 }
 df <- df[dplyr::between(df$ageori,0,120),]
-dfi <- 24
+dfi <- 8
 qknot <- (1:(dfi-3))/(dfi-2)
 VIF <- 0.1
 boundary.knot <- c(0,120)
@@ -82,7 +82,7 @@ Y <- Y + truthRE[df$id,]
 coef00 <- c(0,0,c(1,4,7,1)/100,0,0)
 B00 <- splines2::ibs(df$ageori,knots=knot,degree=2,intercept=TRUE,Boundary.knots=c(0,120))
 
-Y[,1] <- Y[,1] + f_sigmoid(df$ageori,2,70,5) #B00 %*% coef00
+Y[,1] <- Y[,1] + B00 %*% coef00
 Y[,2] <- Y[,2] + f_sshape(df$ageori,mode1,range_L1,range_R1)
 Y[,3] <- Y[,3] + f_wiggle(df$ageori,mean1,sd1,mean2,sd2,p1,p2)
 colnames(Y) <- c('Y1','Y2','Y3')
@@ -108,7 +108,7 @@ X <- as.matrix(df[,X_names],ncol=nX)
 
 Y <- as.matrix(df[,c('Y')],ncol=1) # Biomarkers array
 t <- df$ageori # Age in original scale
-dfi <- 24 # DoF of Spline
+dfi <- 8 # DoF of Spline
 qknot <- (1:(dfi-3))/(dfi-2) # Quantiles to determine knots
 VIF <- 0.1 # Variance inflation factor for BETAKDE
 
@@ -275,7 +275,7 @@ est <- apply(points,1,function(x) c(mean(x),
 var_est <- apply(points,1,var)
 est <- data.frame(t(est))
 colnames(est) <- c("avg","lower","upper")
-est$truth <- f_sigmoid(ages,2,70,5)#spline.basis %*% coef00[3:6]
+est$truth <- spline.basis %*% coef00[3:6]
 est$age <- ages
 est$MSE <- (est$avg - est$truth)^2+var_est
 
