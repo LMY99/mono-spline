@@ -1,4 +1,4 @@
-set.seed(327)
+set.seed(2)
 source("functions_S.R")
 usePackage("splines2")
 usePackage("TruncatedNormal")
@@ -33,14 +33,16 @@ N <- 250
 
 dataset_num <- 100
 
-CI_repeat <- array(0,dim=c(dataset_num,1201,5))
+CI_repeat <- array(0,dim=c(dataset_num,1201,6))
 turning <- array(0,dim=c(dataset_num,3))
 CI_covariate_repeat <- array(0,dim=c(dataset_num,nrow(true_fixed_effect),4))
 true_turning <- rep(0, dataset_num)
 
-#coef_repeat_S <- array(0,dim=c(dataset_num,5000,4+4))
+coef_repeat_S <- array(0,dim=c(dataset_num,5000,4+20))
 
 RE_repeat <- array(0,dim=c(dataset_num,N,4))
+# RE + fixed intercept
+offset_repeat <- array(0,dim=c(dataset_num,N,4))
 
 for(di in 1:dataset_num){
   
@@ -58,7 +60,7 @@ for(i in 1:N){
   ))
 }
 df <- df[dplyr::between(df$ageori,0,120),]
-dfi <- 8
+dfi <- 24
 qknot <- (1:(dfi-3))/(dfi-2)
 VIF <- 0.1
 boundary.knot <- c(0,120)
@@ -85,7 +87,7 @@ Y <- Y + truthRE[df$id,]
 coef00 <- c(0,0,c(1,4,7,1)/100,0,0)
 B00 <- splines2::ibs(df$ageori,knots=knot,degree=2,intercept=TRUE,Boundary.knots=c(0,120))
 
-Y[,1] <- Y[,1] + B00 %*% coef00
+Y[,1] <- Y[,1] + f_sigmoid(df$ageori,2,70,5) #B00 %*% coef00
 Y[,2] <- Y[,2] + f_sshape(df$ageori,mode1,range_L1,range_R1)
 Y[,3] <- Y[,3] + f_wiggle(df$ageori,mean1,sd1,mean2,sd2,p1,p2)
 colnames(Y) <- c('Y1','Y2','Y3')
@@ -107,7 +109,7 @@ K <- 1 # Number of biomarkers
 X <- as.matrix(df[,X_names],ncol=nX) 
 Y <- as.matrix(df[,c('Y')],ncol=1) # Biomarkers array
 t <- df$ageori # Age in original scale
-dfi <- 8 # DoF of Spline
+dfi <- 24 # DoF of Spline
 qknot <- (1:(dfi-3))/(dfi-2) # Quantiles to determine knots
 VIF <- 0.1 # Variance inflation factor for BETAKDE
 
@@ -151,7 +153,7 @@ for(i in seq_along(unique.IDs)){
   long_all_ss[i] <- sum(df$ID==i)
 }
 
-R <- 1e2 # Set Number of Iterations
+R <- 1e3 # Set Number of Iterations
 Burnin <- R/2 # Set Number of Burn-ins
 
 
@@ -183,6 +185,7 @@ sigmays <- rep(0,R)
 sigmaws <- rep(0,R)
 pens <- array(0, c(2, R))
 REs <- array(0, c(dim(long_ss),R))
+offsets <- array(0, c(dim(long_ss),R))
 
 coefs[1:nX,,1] <- 
   t(rtmvnorm(ncol(Y),mu=beta.prior$mean,
@@ -260,6 +263,12 @@ for(i in 1:(R-1)){
   sigmaws[i+1] <- update_sigmaw(REs[,,i+1],3,0.5)
 }
 
+for(i in 1:R){
+  for(k in 1:K){
+  offsets[,k,i] <- REs[,k,i] + coefs[1,k,i]
+  }
+}
+
 ages <- seq(0,120,by=0.1)
 points <- array(0,c(length(ages),R-Burnin))
 
@@ -271,10 +280,12 @@ spline.basis <- spline.basis[,3:(dfi-2)]
 points <- spline.basis %*% coefs[-(1:nX),1,indice]
 est <- apply(points,1,function(x) c(mean(x),
                                     coda::HPDinterval(coda::as.mcmc(x))))
+var_est <- apply(points,1,var)
 est <- data.frame(t(est))
 colnames(est) <- c("avg","lower","upper")
-est$truth <- spline.basis %*% coef00[3:6]
+est$truth <- f_sigmoid(ages,2,70,5)#spline.basis %*% coef00[3:6]
 est$age <- ages
+est$MSE <- (est$avg - est$truth)^2+var_est
 
 turning[di,1:2] <- apply(points, 2, function(x){
   ages[max(which(diff(x,differences=2)>=0))+1]
@@ -295,8 +306,14 @@ true_turning[di] <- ages[max(which(diff(est$truth,differences=2)>=0))+1]
 RE_repeat[di,,1:3] <- t(apply(REs,c(1,2),
                               function(x) c(mean(x),coda::HPDinterval(coda::as.mcmc(x))))[,,1])
 RE_repeat[di,,4] <- truthRE[,1]
+
+offset_repeat[di,,1:3] <- t(apply(offsets,c(1,2),
+                              function(x) c(mean(x),coda::HPDinterval(coda::as.mcmc(x))))[,,1])
+offset_repeat[di,,4] <- truthRE[,1] + 0.4
+
 }
-save(CI_repeat,turning,true_turning,CI_covariate_repeat,RE_repeat,file='S_CIs.rda')
+save(CI_repeat,turning,true_turning,CI_covariate_repeat,RE_repeat,offset_repeat,file='S_CIs.rda')
+true_turning <- b0
 covered <- apply(CI_repeat,c(1,2),function(x) (x[4]-x[2])*(x[4]-x[3])<=0)
 cover_rate <- apply(covered, 2, mean)
 

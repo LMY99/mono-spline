@@ -8,6 +8,8 @@ cat("Flexible model(Covariate):\n")
 cat(apply(apply(CI_covariate_repeat,c(1,2),function(x)(x[4]-x[2])*(x[4]-x[3])<=0),2,mean))
 cat("\nFlexible model(RE):\n")
 cat(mean(apply(RE_repeat,c(1,2),function(x)(x[4]-x[2])*(x[4]-x[3])<=0)))
+cat("\nFlexible model(Offset):\n")
+cat(mean(apply(offset_repeat,c(1,2),function(x)(x[4]-x[2])*(x[4]-x[3])<=0)))
 
 load("S_CIs.rda")
 s_CIs <- CI_repeat
@@ -17,6 +19,8 @@ cat("\nS-Shaped model(Covariate):\n")
 cat(apply(apply(CI_covariate_repeat,c(1,2),function(x)(x[4]-x[2])*(x[4]-x[3])<=0),2,mean))
 cat("\nS-Shaped model(RE):\n")
 cat(mean(apply(RE_repeat,c(1,2),function(x)(x[4]-x[2])*(x[4]-x[3])<=0)))
+cat("\nS-Shaped model(Offset):\n")
+cat(mean(apply(offset_repeat,c(1,2),function(x)(x[4]-x[2])*(x[4]-x[3])<=0)))
 
 sink()
 
@@ -45,6 +49,11 @@ plot(ages,colMeans(length_flex)/colMeans(length_S),type='l',xlab='Age',ylab='CI 
      main='Relative Efficiency of S-shape vs Flex')
 abline(h=1,lty=2)
 
+plot(ages,colMeans(flex_CIs[,,6]),type='l',xlab='Age',ylab='MSE',main='Average posterior MSE',
+     col='red')
+lines(ages,colMeans(s_CIs[,,6]),col='blue')
+legend('bottomright',legend=c("Flexible","S-shape"),col=c("red","blue"),
+       lty=c(1,1))
 dev.off()
 
 cat("")
