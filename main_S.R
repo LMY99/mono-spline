@@ -44,6 +44,9 @@ RE_repeat <- array(0,dim=c(dataset_num,N,4))
 # RE + fixed intercept
 offset_repeat <- array(0,dim=c(dataset_num,N,4))
 
+sigmay_repeat <- array(0,dim=c(dataset_num,4))
+sigmaw_repeat <- array(0,dim=c(dataset_num,4))
+
 for(di in 1:dataset_num){
   
 cat(di);cat(":\n")
@@ -311,11 +314,16 @@ offset_repeat[di,,1:3] <- t(apply(offsets,c(1,2),
                               function(x) c(mean(x),coda::HPDinterval(coda::as.mcmc(x))))[,,1])
 offset_repeat[di,,4] <- truthRE[,1] + 0.4
 
+sigmay_repeat[di,1] <- mean(sigmays[indice])
+sigmay_repeat[di,2:3] <- coda::HPDinterval(coda::as.mcmc(sigmays[indice]))
+sigmay_repeat[di,4] <- residual_var
+sigmaw_repeat[di,1] <- mean(sigmaws[indice])
+sigmaw_repeat[di,2:3] <- coda::HPDinterval(coda::as.mcmc(sigmaws[indice]))
+sigmaw_repeat[di,4] <- random_effect_var
+
 }
-sy <- sigmays[indice]; true_sy <- residual_var
-sw <- sigmaws[indice]; true_sw <- random_effect_var
 save(CI_repeat,turning,true_turning,CI_covariate_repeat,RE_repeat,offset_repeat,
-     sy,true_sy,sw,true_sw,file='S_CIs.rda')
+     sigmay_repeat,sigmaw_repeat,file='S_CIs.rda')
 covered <- apply(CI_repeat,c(1,2),function(x) (x[4]-x[2])*(x[4]-x[3])<=0)
 cover_rate <- apply(covered, 2, mean)
 
