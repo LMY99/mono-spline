@@ -166,7 +166,7 @@ update_coef <- function(covars.list,nX,Y,RE,sy,sw,id,prior.mean,prior.precision,
     # res[,k] <- rtMVN(mu,variance,(nX+1):length(mu),FALSE)
     res[,,k] <- hdtg::harmonicHMC(samples,burnin,mu,chol(variance),
                                  diag(length(mu))[-(1:nX),],rep(0,length(mu)-nX),
-                                 rep(0.1,length(mu)),precFlg=FALSE)$samples[(burnin+1):(burnin+samples),]
+                                 rep(0.1,length(mu)),precFlg=FALSE)
   }
   return(res)
 }
