@@ -237,8 +237,8 @@ ruMVN <- function(n,mu,V,q,k,Ms,burnin=100){
   init0 <- c(init0, exp(cumsum(tt)))
   
   res <- hdtg::harmonicHMC(n, burnin, mu, cholesky(V),
-                           M, rep(0,l-q+1), init0, precFlg=FALSE)$sample
-  return(res[(burnin+1):(burnin+n),])
+                           M, rep(0,l-q+1), init0, precFlg=FALSE)
+  return(res)
   
 }
 
@@ -278,7 +278,7 @@ hdtg_S <- function(n,mu,sigma,free=NULL,burnin=5){
     if(i<p_res) init[res_index][(i+1):p_res] <- sort(init[res_index][(i+1):p_res],decreasing=TRUE)
     result[inflex.points==i,] <- hdtg::harmonicHMC(n=pnums,burnin=burnin,
                                                    mean=mu,choleskyFactor=chol(sigma),
-                                                   F=Fmat,g=g,init=init,precFlg=FALSE)$samples[(burnin+1):(burnin+pnums),]
+                                                   F=Fmat,g=g,init=init,precFlg=FALSE)
   }
   if(n==1) return(as.vector(result))
   else return(result)
