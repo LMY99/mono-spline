@@ -62,6 +62,15 @@ plot(ages,colMeans(flex_CIs[,,6]),type='l',xlab='Age',ylab='MSE',main='Average p
 lines(ages,colMeans(s_CIs[,,6]),col='blue')
 legend('bottomright',legend=c("Flexible","S-shape"),col=c("red","blue"),
        lty=c(1,1))
+
+matplot(ages,t(flex_CIs[1:5,,1]),col='red',type='l',lty=1,lwd=0.5
+        ,xlab='Age',ylab='Biomarker',main='Model Truth VS Flexible Posterior Mean Estimates',)
+lines(ages,colMeans(flex_CIs[,,4]),lwd=2,lty=2)
+
+matplot(ages,t(s_CIs[1:5,,1]),col='red',type='l',lty=1,lwd=0.5
+        ,xlab='Age',ylab='Biomarker',main='Model Truth VS S-Shape Posterior Mean Estimates',)
+lines(ages,colMeans(s_CIs[,,4]),lwd=2,lty=2)
+
 dev.off()
 
 cat("")
