@@ -228,29 +228,29 @@ for(i in 1:(R-1)){
                               prec,samples=1),c(2,3,1))
   REs[,,i+1] <- update_W(covar.list,Y,as.matrix(coefs[,,i+1],ncol=K),long_ss,
                          df$ID,sigmays[i+1],sigmaws[i])
-  # new_pens <- update_pens(gamma=as.matrix(coefs[(nX+1):ncol(covar.list[[1]]),,i+1],nrow=K),
-  #                         mu=gamma.prior$mean,
-  #                         lambda=pens[,i],
-  #                         lpd=lpd,
-  #                         ls=ls,
-  #                         weight=w
-  # )
-  # pens[,i+1] <- new_pens$new
-  # acc <- acc + new_pens$acc_status
-  # if(i%%50==0){
-  #   delta <- min(0.1, 1/sqrt(i/50))
-  #   rate <- acc/50
-  #   if(rate >= 0.234){
-  #     ls <- ls + delta
-  #   }
-  #   else{
-  #     ls <- ls - delta
-  #   }
-  #   acc <- 0
-  #   lss <- c(lss, ls)
-  # }
+  new_pens <- update_pens(gamma=as.matrix(coefs[(nX+1):ncol(covar.list[[1]]),,i+1],nrow=K),
+                          mu=gamma.prior$mean,
+                          lambda=pens[,i],
+                          lpd=lpd,
+                          ls=ls,
+                          weight=w
+  )
+  pens[,i+1] <- new_pens$new
+  acc <- acc + new_pens$acc_status
+  if(i%%50==0){
+    delta <- min(0.1, 1/sqrt(i/50))
+    rate <- acc/50
+    if(rate >= 0.234){
+      ls <- ls + delta
+    }
+    else{
+      ls <- ls - delta
+    }
+    acc <- 0
+    lss <- c(lss, ls)
+  }
   #pens[,i+1] <- pens[,i]
-  pens[,i+1] <- pens[,i]
+  # pens[,i+1] <- pens[,i]
   
   # REs[,,i+1] <- update_W(covar.list,Y,as.matrix(coefs[,,i+1],ncol=K),long_ss,
   #                        df$ID,sigmays[i+1],sigmaws[i])
