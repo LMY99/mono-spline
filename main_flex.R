@@ -13,8 +13,8 @@ num_visits_mean <- 20 # Poisson
 N_cont_covars <- 2 # N(0,1) continous covariates
 N_binary_covars <- 2
 p_binary_covars <- c(1,0.5)
-random_effect_var <- 0.7^2
-residual_var <- 0.4^2
+random_effect_var <- 1
+residual_var <- 0.5
 
 true_fixed_effect <- matrix(c(+0.4,+0.4,-0.5,
                               -0.5,-0.5,+0.1,
