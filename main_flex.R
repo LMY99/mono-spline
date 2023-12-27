@@ -9,7 +9,7 @@ start_time_low <- 0
 start_time_upper <- 100 # Normal
 interval_time_min <- 1
 interval_time_exp_rate <- 20 # 1+Exp(rate)
-num_visits_mean <- 20 # Poisson
+num_visits_mean <- 10 # Poisson
 N_cont_covars <- 2 # N(0,1) continous covariates
 N_binary_covars <- 2
 p_binary_covars <- c(1,0.5)
