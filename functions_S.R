@@ -285,7 +285,7 @@ hdtg_S <- function(n,mu,sigma,free=NULL,burnin=5){
 }
 # Calculate (log-)normalizing constant of UMVN
 puMVN <- function(mu,V,q,Ms,k=NULL,eps=1e-2,log=T,verbose=FALSE){
-  require(Rmpfr)
+  #require(Rmpfr)
   stopifnot(c(length(mu)==dim(V)[1],dim(V)[1]==dim(V)[2],q<=length(mu)))
   require(mvtnorm)
   l <- length(mu)
@@ -483,7 +483,7 @@ update_W <- function(covars.list,Y,coefs,long_ss,ID,
 
 lwmean <- function(a,b,w=1/2){
   require(matrixStats)
-  require(Rmpfr)
+  #require(Rmpfr)
   a0=a+log(w);b0=b+log(1-w)
   mat=rbind(a0,b0)
   return(colLogSumExps(mat))
@@ -492,7 +492,7 @@ lwmean <- function(a,b,w=1/2){
 logpmvnorm <- function(lb,ub,mu,Sigma,Nmax=1e3){
   require(matrixStats)
   require(VGAM)
-  require(Rmpfr)
+  #require(Rmpfr)
   precision=100
   a=lb-mu; b=ub-mu
   #a=mpfr(a,precision);b=mpfr(b,precision)
