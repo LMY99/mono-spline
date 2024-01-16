@@ -1,4 +1,7 @@
-set.seed(1)
+args <- commandArgs(trailingOnly = TRUE)
+seed <- as.integer(args[1])
+
+set.seed(seed)
 
 source("functions_flex.R")
 source("exchangable_cov.R")
@@ -6,11 +9,11 @@ source("exchangable_cov.R")
 library(EnvStats)
 library(rstan)
 
-start_time_low <- 0
-start_time_upper <- 100 # Normal
+start_time_low <- 50
+start_time_upper <- 90 # Normal
 interval_time_min <- 1
 interval_time_exp_rate <- 20 # 1+Exp(rate)
-num_visits_mean <- 20 # Poisson
+num_visits_mean <- 10 # Poisson
 N_cont_covars <- 2 # N(0,1) continous covariates
 N_binary_covars <- 2
 p_binary_covars <- c(1,0.5)
@@ -28,7 +31,7 @@ mean1 <- 70; sd1 <- 5; mean2 <- 100; sd2 <- 5; p1 <- 0.4; p2 <- 0.6
 
 N <- 250
 
-dataset_num <- 100
+dataset_num <- 1
 
 R <- 10000L
 
@@ -203,7 +206,7 @@ scales[di,] <- c(mean(stan.array$lscale),
 }
 
 save(CI_repeat,turning,true_turning,CI_covariate_repeat,RE_repeat,offset_repeat,
-     sigmay_repeat,sigmaw_repeat,file='para_CIs.rda')
+     sigmay_repeat,sigmaw_repeat,file=sprintf('para_CIs_%03d.rda',seed))
 covered <- apply(CI_repeat,c(1,2),function(x) (x[4]-x[2])*(x[4]-x[3])<=0)
 cover_rate <- apply(covered, 2, mean)
 

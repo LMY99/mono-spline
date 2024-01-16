@@ -1,4 +1,7 @@
-set.seed(2)
+args <- commandArgs(trailingOnly = TRUE)
+seed <- as.integer(args[1])
+
+set.seed(seed)
 source("functions_S.R")
 usePackage("splines2")
 usePackage("TruncatedNormal")
@@ -9,8 +12,8 @@ options(warn=0)
 
 library(EnvStats)
 
-start_time_low <- 0
-start_time_upper <- 100 # Normal
+start_time_low <- 50
+start_time_upper <- 90 # Normal
 interval_time_min <- 1
 interval_time_exp_rate <- 20 # 1+Exp(rate)
 num_visits_mean <- 10 # Poisson
@@ -31,7 +34,7 @@ mean1 <- 70; sd1 <- 5; mean2 <- 100; sd2 <- 5; p1 <- 0.4; p2 <- 0.6
 
 N <- 250
 
-dataset_num <- 100
+dataset_num <- 1
 
 CI_repeat <- array(0,dim=c(dataset_num,1201,6))
 turning <- array(0,dim=c(dataset_num,3))
@@ -324,7 +327,7 @@ sigmaw_repeat[di,4] <- random_effect_var
 }
 true_turning <- mode1
 save(CI_repeat,turning,true_turning,CI_covariate_repeat,RE_repeat,offset_repeat,
-     sigmay_repeat,sigmaw_repeat,file='S_CIs.rda')
+     sigmay_repeat,sigmaw_repeat,file=sprintf('S_CIs_%03d.rda',seed))
 covered <- apply(CI_repeat,c(1,2),function(x) (x[4]-x[2])*(x[4]-x[3])<=0)
 cover_rate <- apply(covered, 2, mean)
 
