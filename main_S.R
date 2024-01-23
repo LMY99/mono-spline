@@ -25,8 +25,8 @@ residual_var <- 0.5
 
 true_fixed_effect <- matrix(c(+0.4,+0.4,-0.5,
                               -0.5,-0.5,+0.1,
-                              +0.1,+0.1,+0.5,
-                              -0.1,-0.1,+0.6),nrow = 4,ncol = 3,byrow=TRUE)
+                              +0.1,+0.1,+0.5),nrow = 3,ncol = 3,byrow=TRUE)
+nX <- 3
 # true_fixed_effect <- matrix(c(0,0,0),1,3)
 a0 <- 1; b0 <- 70; d0 <- 5
 mode1<-50; range_L1 <- 30; range_R1 <- 100
@@ -36,19 +36,19 @@ N <- 250
 
 dataset_num <- 10
 
-CI_repeat <- array(0,dim=c(dataset_num,1201,6))
-turning <- array(0,dim=c(dataset_num,3))
-CI_covariate_repeat <- array(0,dim=c(dataset_num,nrow(true_fixed_effect),4))
+CI_repeat <- array(0,dim=c(dataset_num,1201,8))
+turning <- array(0,dim=c(dataset_num,6))
+CI_covariate_repeat <- array(0,dim=c(dataset_num,nrow(true_fixed_effect),7))
 true_turning <- rep(0, dataset_num)
 
 coef_repeat_S <- array(0,dim=c(dataset_num,5000,4+20))
 
-RE_repeat <- array(0,dim=c(dataset_num,N,4))
+RE_repeat <- array(0,dim=c(dataset_num,N,7))
 # RE + fixed intercept
-offset_repeat <- array(0,dim=c(dataset_num,N,4))
+offset_repeat <- array(0,dim=c(dataset_num,N,7))
 
-sigmay_repeat <- array(0,dim=c(dataset_num,4))
-sigmaw_repeat <- array(0,dim=c(dataset_num,4))
+sigmay_repeat <- array(0,dim=c(dataset_num,7))
+sigmaw_repeat <- array(0,dim=c(dataset_num,7))
 
 for(di in 1:dataset_num){
   
@@ -77,8 +77,7 @@ knot <- (boundary.knot[2]-boundary.knot[1])*knot+boundary.knot[1]
 
 X <- cbind(X1=rbinom(N,1,p_binary_covars[1]),
            X2=rbinom(N,1,p_binary_covars[2]),
-           X3=rnorm(N),
-           X4=rnorm(N))
+           X3=rnorm(N))
 X_names <- colnames(X)
 # X <- matrix(0, nrow(X), ncol(X))
 # X <- matrix(rep(1,N),N,1)
@@ -292,37 +291,59 @@ colnames(est) <- c("avg","lower","upper")
 est$truth <- f_sigmoid(ages,2,70,5)#spline.basis %*% coef00[3:6]
 est$age <- ages
 est$MSE <- (est$avg - est$truth)^2+var_est
+est$bias2 <- (est$avg - est$truth)^2
+est$var <- var_est
 
-turning[di,1:2] <- apply(points, 2, function(x){
+inflects <- apply(points, 2, function(x){
   ages[max(which(diff(x,differences=2)>=0))+1]
-}) |> coda::as.mcmc() |> coda::HPDinterval()
-turning[di,3] <- apply(points, 2, function(x){
-  ages[max(which(diff(x,differences=2)>=0))+1]
-}) |> mean()
+})
+
+turning[di,1:2] <- HDInterval::hdi(inflects)
+turning[di,3] <- mean(inflects)
+true_turning[di] <- ages[max(which(diff(est$truth,differences=2)>=0))+1]
+turning[di,5] <- (turning[di,3] - true_turning[di])^2
+turning[di,6] <- var(inflects)
+turning[di,4] <- sum(turning[di,5:6])
 
 CI_repeat[di,,] <- as.matrix(est)
 
 CI_covariate_repeat[di,,1:3] <- t(apply(coefs[1:nX,1,indice],1,
                                         function(x) c(mean(x),coda::HPDinterval(coda::as.mcmc(x)))))
-CI_covariate_repeat[di,,4] <- c(0.4,-0.5,0.1,-0.1)
+CI_covariate_repeat[di,,4] <- c(0.4,-0.5,0.1)
+CI_covariate_repeat[di,,7] <- t(apply(coefs[1:nX,1,indice],1,var))
+CI_covariate_repeat[di,,6] <- (CI_covariate_repeat[di,,1]-CI_covariate_repeat[di,,4])^2
+CI_covariate_repeat[di,,5] <- CI_covariate_repeat[di,,6] + CI_covariate_repeat[di,,7]
 
-true_turning[di] <- ages[max(which(diff(est$truth,differences=2)>=0))+1]
+
 
 #coef_repeat_S[di,,] <- t(coefs[,1,indice])
 RE_repeat[di,,1:3] <- t(apply(REs,c(1,2),
                               function(x) c(mean(x),coda::HPDinterval(coda::as.mcmc(x))))[,,1])
 RE_repeat[di,,4] <- truthRE[,1]
+RE_repeat[di,,7] <- t(apply(REs[,,indice],1,var))
+RE_repeat[di,,6] <- (RE_repeat[di,,1]-RE_repeat[di,,4])^2
+RE_repeat[di,,5] <- RE_repeat[di,,6] + RE_repeat[di,,7]
 
 offset_repeat[di,,1:3] <- t(apply(offsets,c(1,2),
                               function(x) c(mean(x),coda::HPDinterval(coda::as.mcmc(x))))[,,1])
 offset_repeat[di,,4] <- truthRE[,1] + 0.4
+offset_repeat[di,,7] <- t(apply(offsets[,,indice],1,var))
+offset_repeat[di,,6] <- (offset_repeat[di,,1]-offset_repeat[di,,4])^2
+offset_repeat[di,,5] <- offset_repeat[di,,6] + offset_repeat[di,,7]
 
 sigmay_repeat[di,1] <- mean(sigmays[indice])
 sigmay_repeat[di,2:3] <- coda::HPDinterval(coda::as.mcmc(sigmays[indice]))
 sigmay_repeat[di,4] <- residual_var
+sigmay_repeat[di,6:7] <- c((sigmay_repeat[di,1]-sigmay_repeat[di,4])^2,
+                           var(sigmays[indice]))
+sigmay_repeat[di,5] <- sum(sigmay_repeat[di,6:7])
+
 sigmaw_repeat[di,1] <- mean(sigmaws[indice])
 sigmaw_repeat[di,2:3] <- coda::HPDinterval(coda::as.mcmc(sigmaws[indice]))
 sigmaw_repeat[di,4] <- random_effect_var
+sigmaw_repeat[di,6:7] <- c((sigmaw_repeat[di,1]-sigmaw_repeat[di,4])^2,
+                           var(sigmaws[indice]))
+sigmaw_repeat[di,5] <- sum(sigmaw_repeat[di,6:7])
 
 }
 true_turning <- b0

@@ -22,8 +22,8 @@ residual_var <- 0.5
 
 true_fixed_effect <- matrix(c(+0.4,+0.4,-0.5,
                               -0.5,-0.5,+0.1,
-                              +0.1,+0.1,+0.5,
-                              -0.1,-0.1,+0.6),nrow = 4,ncol = 3,byrow=TRUE)
+                              +0.1,+0.1,+0.5),nrow = 3,ncol = 3,byrow=TRUE)
+nX <- 3
 # true_fixed_effect <- matrix(c(0,0,0),1,3)
 a0 <- 1; b0 <- 70; d0 <- 5
 mode1<-50; range_L1 <- 30; range_R1 <- 100
@@ -33,24 +33,24 @@ N <- 250
 
 dataset_num <- 10
 
-R <- 10000L
+R <- 100L
 
-CI_repeat <- array(0,dim=c(dataset_num,1201,6))
+CI_repeat <- array(0,dim=c(dataset_num,1201,8))
 # coef_repeat <- array(0,dim=c(dataset_num,5000,5))
-CI_covariate_repeat <- array(0,dim=c(dataset_num,nrow(true_fixed_effect),4))
-turning <- array(0,dim=c(dataset_num,3))
+CI_covariate_repeat <- array(0,dim=c(dataset_num,nrow(true_fixed_effect),7))
+turning <- array(0,dim=c(dataset_num,6))
 true_turning <- rep(0, dataset_num)
 amp <- array(0,dim=c(dataset_num,3))
 true_amp <- rep(0, dataset_num)
 scales <- array(0,dim=c(dataset_num,3))
 true_scales <- rep(0, dataset_num)
 
-RE_repeat <- array(0,dim=c(dataset_num,N,4))
+RE_repeat <- array(0,dim=c(dataset_num,N,7))
 # RE + fixed intercept
-offset_repeat <- array(0,dim=c(dataset_num,N,4))
+offset_repeat <- array(0,dim=c(dataset_num,N,7))
 
-sigmay_repeat <- array(0,dim=c(dataset_num,4))
-sigmaw_repeat <- array(0,dim=c(dataset_num,4))
+sigmay_repeat <- array(0,dim=c(dataset_num,7))
+sigmaw_repeat <- array(0,dim=c(dataset_num,7))
 
 for(di in 1:dataset_num){
 
@@ -79,8 +79,7 @@ knot <- (boundary.knot[2]-boundary.knot[1])*knot+boundary.knot[1]
 
 X <- cbind(X1=rbinom(N,1,p_binary_covars[1]),
            X2=rbinom(N,1,p_binary_covars[2]),
-           X3=rnorm(N),
-           X4=rnorm(N))
+           X3=rnorm(N))
 X_names <- colnames(X)
 # X <- matrix(0, nrow(X), ncol(X))
 # X <- matrix(rep(1,N),N,1)
@@ -114,7 +113,7 @@ library(ggplot2)
 
 K <- 1 # Number of biomarkers
 # All non-age covariates
-X <- as.matrix(df[,c('X1','X2','X3','X4')]) 
+X <- as.matrix(df[,c('X1','X2','X3')]) 
 Y <- as.matrix(df[,c('Y')],ncol=K) # Biomarkers array
 y_obs <- matrix(nrow=nrow(Y),ncol=ncol(Y))
 for(i in 1:nrow(Y)){
@@ -164,19 +163,27 @@ colnames(est) <- c("avg","lower","upper")
 est$truth <- f_sigmoid(ages,2,70,5)#spline.basis %*% coef00[3:6]
 est$age <- ages
 est$MSE <- (est$avg - est$truth)^2+var_est
+est$bias2 <- (est$avg - est$truth)^2
+est$var <- var_est
 
 CI_repeat[di,,] <- as.matrix(est)
 #coef_repeat[di,,] <- t(coefs[,1,indice])
 
 CI_covariate_repeat[di,,1:3] <- t(apply(stan.array$beta[,1,],2,
                                         function(x) c(mean(x),HDInterval::hdi(x))))
-CI_covariate_repeat[di,,4] <- c(0.4,-0.5,0.1,-0.1)
+CI_covariate_repeat[di,,4] <- c(0.4,-0.5,0.1)
+CI_covariate_repeat[di,,7] <- t(apply(stan.array$beta[,1,],2,var))
+CI_covariate_repeat[di,,6] <- (CI_covariate_repeat[di,,1]-CI_covariate_repeat[di,,4])^2
+CI_covariate_repeat[di,,5] <- CI_covariate_repeat[di,,6] + CI_covariate_repeat[di,,7]
 
 #coef_repeat_flex[di,,] <- t(coefs[,1,indice])
 
 RE_repeat[di,,1:3] <- t(apply(stan.array$randomint[,1,],2,
                               function(x) c(mean(x),HDInterval::hdi(x))))
 RE_repeat[di,,4] <- truthRE[,1]
+RE_repeat[di,,7] <- t(apply(stan.array$randomint[,1,],2,var))
+RE_repeat[di,,6] <- (RE_repeat[di,,1]-RE_repeat[di,,4])^2
+RE_repeat[di,,5] <- RE_repeat[di,,6] + RE_repeat[di,,7]
 
 offsets <- stan.array$randomint[,1,]
 for(j in 1:(R/2)){
@@ -186,17 +193,29 @@ for(j in 1:(R/2)){
 offset_repeat[di,,1:3] <- t(apply(offsets,2,
                                   function(x) c(mean(x),HDInterval::hdi(x))))
 offset_repeat[di,,4] <- truthRE[,1] + 0.4
+offset_repeat[di,,7] <- t(apply(offsets,2,var))
+offset_repeat[di,,6] <- (offset_repeat[di,,1]-offset_repeat[di,,4])^2
+offset_repeat[di,,5] <- offset_repeat[di,,6] + offset_repeat[di,,7]
 
 sigmay_repeat[di,1] <- mean(stan.array$sigmaerror)
 sigmay_repeat[di,2:3] <- HDInterval::hdi(stan.array$sigmaerror)
 sigmay_repeat[di,4] <- residual_var
+sigmay_repeat[di,6:7] <- c((sigmay_repeat[di,1]-sigmay_repeat[di,4])^2,
+                           var(stan.array$sigmaerror))
+sigmay_repeat[di,5] <- sum(sigmay_repeat[di,6:7])
 sigmaw_repeat[di,1] <- mean(stan.array$sigmarandom)
 sigmaw_repeat[di,2:3] <- HDInterval::hdi(stan.array$sigmarandom)
 sigmaw_repeat[di,4] <- random_effect_var
+sigmaw_repeat[di,6:7] <- c((sigmaw_repeat[di,1]-sigmaw_repeat[di,4])^2,
+                           var(stan.array$sigmarandom))
+sigmaw_repeat[di,5] <- sum(sigmaw_repeat[di,6:7])
 
 true_turning[di] <- 70
-turning[di,] <- c(mean(stan.array$lpos),
+turning[di,1:3] <- c(mean(stan.array$lpos),
                   HDInterval::hdi(stan.array$lpos))
+turning[di,5] <- (turning[di,3] - true_turning[di])^2
+turning[di,6] <- var(stan.array$lpos)
+turning[di,4] <- sum(turning[di,5:6])
 true_amp[di] <- 2
 amp[di,] <- c(mean(stan.array$lamp),
               HDInterval::hdi(stan.array$lamp))
