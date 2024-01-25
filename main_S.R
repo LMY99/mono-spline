@@ -34,12 +34,16 @@ mean1 <- 70; sd1 <- 5; mean2 <- 100; sd2 <- 5; p1 <- 0.4; p2 <- 0.6
 
 N <- 250
 
-dataset_num <- 10
+dataset_num <- 1
 
 CI_repeat <- array(0,dim=c(dataset_num,1201,8))
 turning <- array(0,dim=c(dataset_num,6))
 CI_covariate_repeat <- array(0,dim=c(dataset_num,nrow(true_fixed_effect),7))
 true_turning <- rep(0, dataset_num)
+Q50 <- array(0,dim=c(dataset_num,6))
+true_Q50 <- rep(0, dataset_num)
+
+
 
 coef_repeat_S <- array(0,dim=c(dataset_num,5000,4+20))
 
@@ -305,6 +309,16 @@ turning[di,5] <- (turning[di,3] - true_turning[di])^2
 turning[di,6] <- var(inflects)
 turning[di,4] <- sum(turning[di,5:6])
 
+Q50s <- apply(points, 2, function(x){
+  ages[max(which(x>=max(x)/2))]
+})
+Q50[di,1:2] <- HDInterval::hdi(Q50s)
+Q50[di,3] <- mean(Q50s)
+true_Q50[di] <- qtri(.5,range_L1,range_R1,mode1)
+Q50[di,5] <- (Q50[di,3] - true_Q50[di])^2
+Q50[di,6] <- var(Q50s)
+Q50[di,4] <- sum(Q50[di,5:6])
+
 CI_repeat[di,,] <- as.matrix(est)
 
 CI_covariate_repeat[di,,1:3] <- t(apply(coefs[1:nX,1,indice],1,
@@ -348,6 +362,7 @@ sigmaw_repeat[di,5] <- sum(sigmaw_repeat[di,6:7])
 }
 true_turning <- mode1
 save(CI_repeat,turning,true_turning,CI_covariate_repeat,RE_repeat,offset_repeat,
+     Q50, true_Q50,
      sigmay_repeat,sigmaw_repeat,file=sprintf('S_CIs_%03d.rda',seed))
 covered <- apply(CI_repeat,c(1,2),function(x) (x[4]-x[2])*(x[4]-x[3])<=0)
 cover_rate <- apply(covered, 2, mean)
