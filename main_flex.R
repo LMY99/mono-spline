@@ -43,6 +43,8 @@ offset_repeat <- array(0,dim=c(dataset_num,N,7))
 
 sigmay_repeat <- array(0,dim=c(dataset_num,7))
 sigmaw_repeat <- array(0,dim=c(dataset_num,7))
+Q50 <- array(0,dim=c(dataset_num,6))
+true_Q50 <- rep(0, dataset_num)
 
 for(di in 1:dataset_num){
 
@@ -285,6 +287,16 @@ est$MSE <- (est$avg - est$truth)^2+var_est
 est$bias2 <- (est$avg - est$truth)^2
 est$var <- var_est
 
+Q50s <- apply(points, 2, function(x){
+  ages[max(which(x>=max(x)/2))]
+})
+Q50[di,1:2] <- HDInterval::hdi(Q50s)
+Q50[di,3] <- mean(Q50s)
+true_Q50[di] <- ages[max(which(est$truth>=max(est$truth)/2))]
+Q50[di,5] <- (Q50[di,3] - true_Q50[di])^2
+Q50[di,6] <- var(Q50s)
+Q50[di,4] <- sum(Q50[di,5:6])
+
 CI_repeat[di,,] <- as.matrix(est)
 #coef_repeat[di,,] <- t(coefs[,1,indice])
 
@@ -328,6 +340,7 @@ sigmaw_repeat[di,5] <- sum(sigmaw_repeat[di,6:7])
 }
 
 save(CI_repeat,CI_covariate_repeat,RE_repeat,offset_repeat,
+     Q50, true_Q50,
      sigmay_repeat,sigmaw_repeat,file=sprintf('flex_CIs_%03d.rda',seed))
 covered <- apply(CI_repeat,c(1,2),function(x) (x[4]-x[2])*(x[4]-x[3])<=0)
 cover_rate <- apply(covered, 2, mean)
