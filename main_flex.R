@@ -288,7 +288,7 @@ est$bias2 <- (est$avg - est$truth)^2
 est$var <- var_est
 
 Q50s <- apply(points, 2, function(x){
-  ages[max(which(x>=max(x)/2))]
+  ages[min(which(x>=max(x)/2))]
 })
 Q50[di,1:2] <- HDInterval::hdi(Q50s)
 Q50[di,3] <- mean(Q50s)
