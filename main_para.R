@@ -174,7 +174,7 @@ est$var <- var_est
 Q50s <- stan.array$lpos
 Q50[di,1:2] <- HDInterval::hdi(Q50s)
 Q50[di,3] <- mean(Q50s)
-true_Q50[di] <- ages[max(which(est$truth>=max(est$truth)/2))]
+true_Q50[di] <- ages[min(which(est$truth>=max(est$truth)/2))]
 Q50[di,5] <- (Q50[di,3] - true_Q50[di])^2
 Q50[di,6] <- var(Q50s)
 Q50[di,4] <- sum(Q50[di,5:6])
