@@ -31,7 +31,7 @@ mean1 <- 70; sd1 <- 5; mean2 <- 100; sd2 <- 5; p1 <- 0.4; p2 <- 0.6
 
 N <- 250
 
-dataset_num <- 10
+dataset_num <- 1
 
 R <- 100L
 
