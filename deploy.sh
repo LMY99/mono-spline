@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-module load conda_R
+
 for seed in {001..100}; do
   if ! test -f "flex_CIs_${seed}.rda"; then
     sbatch --export="seed=${seed}" -J "flexA${seed}" run_flex.sh
