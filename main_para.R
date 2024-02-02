@@ -33,7 +33,7 @@ N <- 250
 
 dataset_num <- 1
 
-R <- 100L
+R <- 10000L
 
 CI_repeat <- array(0,dim=c(dataset_num,1201,8))
 # coef_repeat <- array(0,dim=c(dataset_num,5000,5))

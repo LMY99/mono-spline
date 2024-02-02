@@ -158,7 +158,7 @@ for(i in seq_along(unique.IDs)){
   long_all_ss[i] <- sum(df$ID==i)
 }
 
-R <- 1e2 # Set Number of Iterations
+R <- 1e4 # Set Number of Iterations
 Burnin <- R/2 # Set Number of Burn-ins
 
 
