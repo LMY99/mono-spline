@@ -223,7 +223,7 @@ sigmaw_repeat[di,6:7] <- c((sigmaw_repeat[di,1]-sigmaw_repeat[di,4])^2,
                            var(stan.array$sigmarandom))
 sigmaw_repeat[di,5] <- sum(sigmaw_repeat[di,6:7])
 
-true_turning[di] <- ages[max(which(diff(est$truth,differences=2)>=0))+1]
+true_turning[di] <- ages[max(which(diff(est$truth,differences=2)>0))+1]
 turning[di,1:3] <- c(mean(stan.array$lpos),
                   HDInterval::hdi(stan.array$lpos))
 turning[di,5] <- (turning[di,3] - true_turning[di])^2
