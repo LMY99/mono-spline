@@ -305,7 +305,7 @@ inflects <- apply(points, 2, function(x){
 turning[di,1:2] <- HDInterval::hdi(inflects)
 turning[di,3] <- mean(inflects)
 true_turning[di] <- ages[max(which(diff(est$truth,differences=2)>0))+1]
-turning[di,5] <- (turning[di,3] - true_turning[di])^2
+turning[di,5] <- (turning[di,1] - true_turning[di])^2
 turning[di,6] <- var(inflects)
 turning[di,4] <- sum(turning[di,5:6])
 
