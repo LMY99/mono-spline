@@ -93,7 +93,7 @@ truthRE <- matrix(rnorm(N*3,sd=sqrt(random_effect_var)),nrow=N,ncol=ncol(Y))
 Y <- Y + matrix(rnorm(length(Y),sd=sqrt(residual_var)),nrow=nrow(Y),ncol=ncol(Y))
 Y <- Y + truthRE[df$id,]
 
-coef00 <- c(0,0,c(0.1,5,0.5,0.01)/100,0,0)
+coef00 <- c(0,0,c(1,4,7,1)/100,0,0)
 B00 <- splines2::ibs(df$ageori,knots=knot,degree=2,intercept=TRUE,Boundary.knots=c(0,120))
 
 Y[,1] <- Y[,1] + B00 %*% coef00
@@ -127,7 +127,7 @@ library(ggplot2)
 # Construct biomarker-specific design matrix
 covar.list <- as.list(rep(NA,K))
 knot.list <- as.list(rep(NA,K))
-boundary.knot <- c(40,80)#range(t)
+boundary.knot <- c(30,90)#range(t)
 #remove <- 2# Removing the first .. and last .. basis
 for(i in 1:K){
   # Calculate knot points
