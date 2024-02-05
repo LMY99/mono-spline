@@ -93,7 +93,7 @@ truthRE <- matrix(rnorm(N*3,sd=sqrt(random_effect_var)),nrow=N,ncol=ncol(Y))
 Y <- Y + matrix(rnorm(length(Y),sd=sqrt(residual_var)),nrow=nrow(Y),ncol=ncol(Y))
 Y <- Y + truthRE[df$id,]
 
-coef00 <- c(0,0,c(0.1,5,0.5,0.01)/100,0,0)
+coef00 <- c(0,0,c(1,4,7,1)/100,0,0)
 B00 <- splines2::ibs(df$ageori,knots=knot,degree=2,intercept=TRUE,Boundary.knots=c(0,120))
 
 Y[,1] <- Y[,1] + B00 %*% coef00
