@@ -229,7 +229,7 @@ amp[di,] <- c(mean(stan.array$lamp),
 true_scales[di] <- 5
 scales[di,] <- c(mean(stan.array$lscale),
               HDInterval::hdi(stan.array$lscale))
-turning[di,5] <- (turning[di,3] - true_turning[di])^2
+turning[di,5] <- (turning[di,1] - true_turning[di])^2
 turning[di,6] <- var(stan.array$lpos)
 turning[di,4] <- sum(turning[di,5:6])
 }
