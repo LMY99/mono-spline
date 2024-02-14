@@ -86,7 +86,15 @@ f_sigmoid <- function(t, a=1, b=0, d=1){
 # 2. General S-shape
 
 f_sshape <- function(t, mode=0.5, range_L=0, range_R=1){
-  return(ptri(t,range_L,range_R,mode))
+  # return(ptri(t,range_L,range_R,mode))
+  result <- rep(0, length(t))
+  for(j in seq_along(t)){
+    if(t[j]<range_L) result[j] <- 0
+    else if(t[j]>range_R) result[j] <- 1
+    else if(t[j]<mode) result[j] <- (t[j] - range_L)^3/(mode-range_L)/(mode-range_L)/(range_R-range_L)
+    else result[j] <- 1 - (range_R - t[j])^3/(range_R-mode)/(range_R-mode)/(range_R-range_L)
+  }
+  return(result)
 }
 
 # 3. Wiggled
