@@ -24,7 +24,7 @@ true_fixed_effect <- matrix(c(+0.4,+0.4,-0.5,
 nX <- 3
 # true_fixed_effect <- matrix(c(0,0,0),1,3)
 a0 <- 1; b0 <- 70; d0 <- 5
-mode1<-50; range_L1 <- 30; range_R1 <- 90
+mode1<-75; range_L1 <- 30; range_R1 <- 90
 mean1 <- 70; sd1 <- 5; mean2 <- 100; sd2 <- 5; p1 <- 0.4; p2 <- 0.6
 
 N <- 250
