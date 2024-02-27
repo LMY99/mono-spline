@@ -81,8 +81,8 @@ X_names <- colnames(X)
 df <- cbind(df, X[df$id,])
 
 Y <- as.matrix(df[,X_names]) %*% true_fixed_effect
-truthRE <- matrix(rt(N*3,2)*sqrt(random_effect_var),nrow=N,ncol=ncol(Y))
-Y <- Y + matrix(rt(length(Y),2)*sqrt(residual_var),nrow=nrow(Y),ncol=ncol(Y))
+truthRE <- matrix(rt(N*3,1)*sqrt(random_effect_var),nrow=N,ncol=ncol(Y))
+Y <- Y + matrix(rt(length(Y),1)*sqrt(residual_var),nrow=nrow(Y),ncol=ncol(Y))
 Y <- Y + truthRE[df$id,]
 
 coef00 <- c(0,0,c(1,4,7,1)/100,0,0)
