@@ -292,7 +292,7 @@ Q50s <- apply(points, 2, function(x){
 })
 Q50[di,1:2] <- HDInterval::hdi(Q50s)
 Q50[di,3] <- mean(Q50s)
-true_Q50[di] <- qtri(.5,range_L1,range_R1,mode1)
+true_Q50[di] <- 69.31112
 Q50[di,5] <- (Q50[di,3] - true_Q50[di])^2
 Q50[di,6] <- var(Q50s)
 Q50[di,4] <- sum(Q50[di,5:6])

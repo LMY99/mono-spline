@@ -97,7 +97,7 @@ coef00 <- c(0,0,c(1,4,7,1)/100,0,0)
 B00 <- splines2::ibs(df$ageori,knots=knot,degree=2,intercept=TRUE,Boundary.knots=c(0,120))
 
 Y[,1] <- Y[,1] + f_sigmoid(df$ageori,2,70,5) #B00 %*% coef00
-Y[,2] <- Y[,2] + f_sshape(df$ageori,mode1,range_L1,range_R1)
+Y[,2] <- Y[,2] + f_sshape(df$ageori,mode1,range_L1,range_R1)*2
 Y[,3] <- Y[,3] + f_wiggle(df$ageori,mean1,sd1,mean2,sd2,p1,p2)
 colnames(Y) <- c('Y1','Y2','Y3')
 
@@ -162,7 +162,7 @@ est <- apply(points,1,function(x) c(mean(x),HDInterval::hdi(x)))
 var_est <- apply(points,1,var)
 est <- data.frame(t(est))
 colnames(est) <- c("avg","lower","upper")
-est$truth <- f_sshape(ages,mode1,range_L1,range_R1)#spline.basis %*% coef00[3:6]
+est$truth <- f_sshape(ages,mode1,range_L1,range_R1)*2#spline.basis %*% coef00[3:6]
 est$age <- ages
 est$MSE <- (est$avg - est$truth)^2+var_est
 est$bias2 <- (est$avg - est$truth)^2
@@ -171,7 +171,7 @@ est$var <- var_est
 Q50s <- stan.array$lpos
 Q50[di,1:2] <- HDInterval::hdi(Q50s)
 Q50[di,3] <- mean(Q50s)
-true_Q50[di] <- qtri(.5,range_L1,range_R1,mode1)
+true_Q50[di] <- 69.31112
 Q50[di,5] <- (Q50[di,3] - true_Q50[di])^2
 Q50[di,6] <- var(Q50s)
 Q50[di,4] <- sum(Q50[di,5:6])
@@ -223,12 +223,6 @@ sigmaw_repeat[di,5] <- sum(sigmaw_repeat[di,6:7])
 true_turning[di] <-  mode1
 turning[di,1:3] <- c(mean(stan.array$lpos),
                   HDInterval::hdi(stan.array$lpos))
-true_amp[di] <- 2
-amp[di,] <- c(mean(stan.array$lamp),
-              HDInterval::hdi(stan.array$lamp))
-true_scales[di] <- 5
-scales[di,] <- c(mean(stan.array$lscale),
-              HDInterval::hdi(stan.array$lscale))
 turning[di,5] <- (turning[di,1] - true_turning[di])^2
 turning[di,6] <- var(stan.array$lpos)
 turning[di,4] <- sum(turning[di,5:6])
@@ -239,8 +233,3 @@ save(CI_repeat,turning,true_turning,CI_covariate_repeat,RE_repeat,offset_repeat,
      sigmay_repeat,sigmaw_repeat,file=sprintf('para_CIs_%03d.rda',seed))
 covered <- apply(CI_repeat,c(1,2),function(x) (x[4]-x[2])*(x[4]-x[3])<=0)
 cover_rate <- apply(covered, 2, mean)
-
-sink("Parametric_specs.txt")
-cat(paste("Amplitude: True value =",mean(true_amp),"Coverage = ",mean((amp[,2]-true_amp)*(amp[,3]-true_amp)<=0)))
-cat(paste("Scale: True value =",mean(true_scales),"Coverage = ",mean((scales[,2]-true_scales)*(scales[,3]-true_scales)<=0)))
-sink()
