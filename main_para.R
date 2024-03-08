@@ -220,7 +220,7 @@ sigmaw_repeat[di,6:7] <- c((sigmaw_repeat[di,1]-sigmaw_repeat[di,4])^2,
                            var(stan.array$sigmarandom))
 sigmaw_repeat[di,5] <- sum(sigmaw_repeat[di,6:7])
 
-true_turning[di] <- 60
+true_turning[di] <- 70
 turning[di,1:3] <- c(mean(stan.array$lpos),
                   HDInterval::hdi(stan.array$lpos))
 turning[di,5] <- (turning[di,1] - true_turning[di])^2
