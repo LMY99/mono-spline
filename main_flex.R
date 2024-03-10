@@ -64,7 +64,7 @@ for(i in 1:N){
 df <- df[dplyr::between(df$ageori,0,120),]
 dfi <- 24
 qknot <- (1:(dfi-3))/(dfi-2)
-VIF <- 0.1
+VIF <- 1/3
 boundary.knot <- c(0,120)
 t01 <- (df$ageori-boundary.knot[1])/(boundary.knot[2]-boundary.knot[1])
 t01 <- t01[dplyr::between(t01,0,1)]
